@@ -1,0 +1,2683 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Mi Agenda Personal</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="icon.png" />
+<style>
+  /* Tema escritorio moderno */
+  :root{
+    --bg:#0f1115;
+    --grid:rgba(255,255,255,0.03);
+    --card:rgba(255,255,255,0.06);
+    --card-strong:rgba(255,255,255,0.08);
+    --panel:#0b0d11;
+    --accent:#7dd3fc;
+    --accent-2:#c084fc;
+    --muted:#c6cad3;
+    --text:#e8edf7;
+    --radius:14px;
+    --shadow: 0 12px 36px rgba(0,0,0,0.35);
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(circle at 20% 20%, rgba(125,211,252,0.05), transparent 25%),radial-gradient(circle at 80% 0%, rgba(192,132,252,0.08), transparent 30%),var(--bg);color:var(--text);font-size:15px;position:relative;min-height:100vh;}
+  body::before{content:"";position:fixed;inset:0;background-image:linear-gradient(90deg,var(--grid) 1px,transparent 1px),linear-gradient(var(--grid) 1px,transparent 1px);background-size:120px 120px;opacity:0.4;pointer-events:none;}
+  header{
+    background:linear-gradient(120deg,rgba(125,211,252,0.15),rgba(192,132,252,0.18));
+    color:var(--text);padding:18px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.05);backdrop-filter:blur(8px);
+  }
+  header h1{margin:0;font-size:20px;letter-spacing:0.3px;font-weight:700}
+  .brand-mark{width:46px;height:46px;border-radius:12px;background:linear-gradient(145deg,#111826,#0b0f19);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-family:'IBM Plex Mono', monospace;box-shadow:0 10px 30px rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);}
+  .brand-mark img{width:100%;height:100%;object-fit:contain;display:block;}
+
+  .app{display:flex;gap:18px;padding:18px;min-height:calc(100vh - 72px)}
+  main{order:2}
+  .sidebar{order:1}
+  /* Sidebar */
+  .sidebar{width:330px}
+  .card{
+    background:var(--card);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;border:1px solid rgba(255,255,255,0.06);backdrop-filter:blur(6px);
+  }
+  .card strong, h2 {letter-spacing:0.1px;}
+  .brand{font-weight:700;color:var(--accent);text-transform:uppercase;font-size:13px;letter-spacing:1px}
+  .muted{color:var(--muted);font-size:13px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border-radius:12px;border:1px solid transparent;background:linear-gradient(120deg, var(--accent), var(--accent-2));color:#0a1018;cursor:pointer;font-weight:700;box-shadow:0 10px 28px rgba(125,211,252,0.35);transition: transform .12s, box-shadow .12s;
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(192,132,252,0.35)}
+  .btn-ghost{
+    background:var(--card-strong);border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:10px;cursor:pointer;color:var(--muted);font-weight:600;transition:background .12s, color .12s, transform .12s;
+  }
+  .btn-ghost:hover{background:rgba(255,255,255,0.08);color:var(--text);transform:translateY(-1px);}
+  input, textarea, select {
+    width:100%;padding:11px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);margin-top:8px;font-size:14px;
+    background:rgba(10,12,16,0.65);color:var(--text);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+  }
+  textarea{resize:vertical;min-height:120px}
+  .list {max-height:56vh;overflow:auto;margin-top:8px;padding-right:4px}
+  .item {padding:12px;border-radius:12px;cursor:default;border:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;align-items:flex-start;background:rgba(255,255,255,0.02);transition:background .1s, border .1s}
+  .item:hover{background: rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.12)}
+  .item-left{flex:1}
+  .meta {font-size:13px;color:var(--muted);margin-top:6px}
+  .flex{display:flex;gap:10px;align-items:center}
+  .flex-between{display:flex;justify-content:space-between;align-items:center}
+  .small{font-size:13px;color:var(--muted)}
+  .badge{background:linear-gradient(120deg, rgba(125,211,252,0.25), rgba(192,132,252,0.25));padding:4px 8px;border-radius:999px;font-size:12px;color:var(--text);border:1px solid rgba(255,255,255,0.08)}
+  .actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+  footer{padding:14px 18px;color:var(--muted);font-size:13px;text-align:center;opacity:0.8}
+  @media (max-width:980px){ .app{flex-direction:column;padding:12px} .sidebar{width:100%;order:2} main{order:1} }
+
+  /* small edit/delete buttons (discretos, a la derecha) */
+  .item-controls { display:flex; flex-direction:column; gap:6px; margin-left:10px; align-items:flex-end; }
+  .ctrl-btn {
+    padding:7px 9px; font-size:12px; border-radius:8px; border:1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.03); color:var(--muted); cursor:pointer; transition:background .1s, color .1s;
+  }
+  .ctrl-btn:hover { background: rgba(255,255,255,0.08); color:var(--text); border-color:rgba(255,255,255,0.16); }
+
+  /* Dock de accesos directos */
+  .dock{display:flex;flex-direction:column;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.04);border-radius:14px;border:1px solid rgba(255,255,255,0.08);box-shadow:var(--shadow);backdrop-filter:blur(8px);margin:14px 18px 6px}
+  .dock-header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .dock-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .dock-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+  .dock-btn{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:var(--text);cursor:pointer;transition:transform .12s, background .12s, border .12s;font-weight:700;text-align:left;position:relative;min-height:68px}
+  .dock-btn .icon{font-size:22px;line-height:1}
+  .dock-btn .dock-meta{font-size:12px;color:var(--muted);font-weight:600;margin-top:4px;word-break:break-word}
+  .dock-btn:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.14);transform:translateY(-2px)}
+  .dock-btn .edit{position:absolute;right:10px;top:10px;padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.2);color:var(--muted);cursor:pointer;font-size:11px}
+  .dock-btn .edit:hover{background:rgba(255,255,255,0.1);color:var(--text)}
+
+  .glow{box-shadow:0 0 0 2px rgba(125,211,252,0.25),0 0 0 8px rgba(192,132,252,0.12);animation:glow 1.6s ease-out 1;}
+  @keyframes glow{0%{transform:scale(1);} 40%{transform:scale(1.01);} 100%{transform:scale(1);} }
+
+  /* notification toast */
+  #notificacion {
+    position: fixed; right: 20px; bottom: 20px;
+    background: linear-gradient(120deg, rgba(125,211,252,0.2), rgba(192,132,252,0.2)); color: #e8edf7; padding: 12px 18px; border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 12px 30px rgba(0,0,0,0.35);
+    font-size: 0.95rem; opacity: 0; transition: opacity .3s;
+    z-index: 9999;
+  }
+  #notificacion.show { opacity: 1; }
+
+  /* Modal Agenda */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:9998;}
+  .modal{background:var(--panel);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:18px;box-shadow:var(--shadow);max-width:680px;width:92%;max-height:80vh;overflow:auto;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+  .modal-close{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--text);padding:6px 10px;border-radius:10px;cursor:pointer}
+  .modal-close:hover{background:rgba(255,255,255,0.1)}
+  .file-link{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);cursor:pointer;margin:4px 6px 4px 0;}
+
+  /* Calendario */
+  .calendar-wrap{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-top:12px}
+  .calendar-month h3{margin:0 0 8px;font-size:16px}
+  .calendar-nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:10px}
+  .calendar-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;font-size:12px;color:var(--muted)}
+  .day-cell{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);min-height:74px;cursor:pointer;display:flex;flex-direction:column;gap:6px;justify-content:space-between;transition:transform .1s, border .1s, background .1s}
+  .day-cell:hover{transform:translateY(-1px);border-color:rgba(255,255,255,0.16);background:rgba(255,255,255,0.05)}
+  .day-num{font-weight:800;font-size:16px}
+  .day-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .day-tag{font-size:11px;padding:4px 6px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(125,211,252,0.1);color:var(--text)}
+  .day-empty{opacity:0.35;cursor:default}
+  .day-today{border-color:rgba(125,211,252,0.5);box-shadow:0 0 0 2px rgba(125,211,252,0.2)}
+  .week-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+  .week-item{padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .week-meta{font-size:12px;color:var(--muted)}
+  .week-events{font-size:13px;color:var(--text)}
+  @media(max-width:960px){ .calendar-wrap{grid-template-columns:1fr} }
+
+
+
+/* ======================================================
+   THEME PATCH · VIDRIO + FONDO FOTOGRAFICO (NO rompe layout)
+   Pegar al final del <style>.
+   Requiere un archivo: fondo.jpg junto al index.html
+   ====================================================== */
+
+:root{
+  /* Texto legible sobre fondos fotográficos */
+  --text:#111 !important;
+  --muted:rgba(17,17,17,.72) !important;
+
+  /* Panels */
+  --card: rgba(255,255,255,.12) !important;
+  --card-strong: rgba(255,255,255,.16) !important;
+  --panel: rgba(255,255,255,.12) !important;
+  --grid: rgba(255,255,255,0) !important;
+  --shadow: 0 10px 30px rgba(0,0,0,.12) !important;
+}
+
+/* Fondo con foto (nítido, sin grilla) */
+body{
+  background: transparent !important;
+  color: var(--text) !important;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  background-image:url("fondo.jpg") !important;
+  background-size:cover !important;
+  background-position:center !important;
+  background-repeat:no-repeat !important;
+  opacity:1 !important;
+  filter:none !important;
+  pointer-events:none;
+}
+
+/* Header: vidrio suave */
+header{
+  background: rgba(255,255,255,.12) !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid rgba(255,255,255,.18) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.brand{ color: rgba(17,17,17,.78) !important; }
+.muted, .small{ color: var(--muted) !important; }
+
+/* Marca */
+.brand-mark{
+  background: rgba(255,255,255,.14) !important;
+  color: #111 !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+}
+
+/* Cards / paneles */
+.card, .dock, .modal, .day-cell, .week-item{
+  background: rgba(255,255,255,.12) !important;
+  border-color: rgba(255,255,255,.18) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Items de listas */
+.item{
+  background: rgba(255,255,255,.10) !important;
+  border-color: rgba(255,255,255,.16) !important;
+}
+.item:hover{
+  background: rgba(255,255,255,.16) !important;
+  border-color: rgba(255,255,255,.22) !important;
+}
+
+/* Inputs (crema muy suave) */
+input, textarea, select{
+  background: rgba(252,248,230,.18) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #111 !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.10) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+input::placeholder, textarea::placeholder{
+  color: rgba(17,17,17,.55) !important;
+}
+
+/* Botones: vidrio (evita gradientes fuertes) */
+.btn{
+  background: rgba(255,255,255,.18) !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+  color: #111 !important;
+  box-shadow: 0 10px 26px rgba(0,0,0,.12) !important;
+}
+.btn:hover{ box-shadow: 0 12px 30px rgba(0,0,0,.16) !important; }
+
+.btn-ghost, .ctrl-btn, .modal-close, .file-link{
+  background: rgba(255,255,255,.12) !important;
+  border-color: rgba(255,255,255,.20) !important;
+  color: rgba(17,17,17,.78) !important;
+}
+.btn-ghost:hover, .ctrl-btn:hover, .modal-close:hover, .file-link:hover{
+  background: rgba(255,255,255,.18) !important;
+  color: #111 !important;
+}
+
+/* Badges y tags */
+.badge{
+  background: rgba(255,255,255,.16) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #111 !important;
+}
+.day-tag{
+  background: rgba(255,255,255,.16) !important;
+  border-color: rgba(255,255,255,.22) !important;
+  color: #111 !important;
+}
+
+/* Toast */
+#notificacion{
+  background: rgba(255,255,255,.18) !important;
+  color:#111 !important;
+  border-color: rgba(255,255,255,.22) !important;
+}
+
+/* Modal backdrop */
+.modal-backdrop{
+  background: rgba(0,0,0,.40) !important;
+}
+
+/* Dock botones */
+.dock-btn{
+  background: rgba(255,255,255,.10) !important;
+  border-color: rgba(255,255,255,.16) !important;
+  color: #111 !important;
+}
+.dock-btn:hover{
+  background: rgba(255,255,255,.16) !important;
+  border-color: rgba(255,255,255,.22) !important;
+}
+.dock-btn .dock-meta{ color: rgba(17,17,17,.62) !important; }
+.dock-btn .edit{ background: rgba(255,255,255,.14) !important; color: rgba(17,17,17,.78) !important; }
+.dock-btn .edit:hover{ background: rgba(255,255,255,.22) !important; color:#111 !important; }
+
+
+/* ===== Fusion: estilos del Buzón (scopeado, no afecta la Agenda) ===== */
+#panel-buzon .wrap{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+#panel-buzon .topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:6px;
+}
+#panel-buzon .topbar .brand .t{font-weight:900;letter-spacing:.2px}
+#panel-buzon .topbar .brand .s{color:var(--muted);font-size:12px;margin-top:2px}
+#panel-buzon .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+#panel-buzon .grid{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+@media (max-width:980px){
+  #panel-buzon .grid{grid-template-columns:1fr}
+}
+#panel-buzon .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#panel-buzon .sep{height:1px;background:rgba(0,0,0,0.06);margin:12px 0}
+#panel-buzon .list{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+#panel-buzon .item{
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.06);
+  cursor:pointer;
+}
+#panel-buzon .item .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+#panel-buzon .item .title{margin:0;font-weight:800;line-height:1.25}
+#panel-buzon .item .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+#panel-buzon .pill{
+  font-size:11px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.18);
+  background:rgba(255,255,255,0.10);
+  color:var(--text);
+}
+#panel-buzon .pill.done{background:rgba(34,197,94,0.18);border-color:rgba(34,197,94,0.25)}
+#panel-buzon .pill.green{background:rgba(125,211,252,0.16);border-color:rgba(125,211,252,0.22)}
+#panel-buzon .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+#panel-buzon .btn.smallbtn{padding:7px 10px;border-radius:10px;font-size:12px}
+#panel-buzon .btn.shrink{padding:8px 10px}
+#panel-buzon .btn.ghost{background:var(--card-strong);border:1px solid rgba(255,255,255,0.08);color:var(--text);box-shadow:none}
+#panel-buzon .btn.primary{background:linear-gradient(120deg, var(--accent), var(--accent-2));color:#0a1018;border:1px solid transparent}
+#panel-buzon .btn.secondary{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);color:var(--text);box-shadow:none}
+#panel-buzon .btn.danger{background:rgba(239,68,68,0.16);border:1px solid rgba(239,68,68,0.22);color:var(--text);box-shadow:none}
+#panel-buzon textarea#bx_quickText{
+  min-height:110px;
+  height:120px;
+}
+@media (max-width:980px){
+  #panel-buzon textarea#bx_quickText{min-height:100px;height:110px}
+}
+#panel-buzon .muted{color:var(--muted)}
+/* Modal del Buzón */
+#panel-buzon .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);backdrop-filter:blur(4px);z-index:9999}
+#panel-buzon .modal.show{display:flex}
+#panel-buzon .modal-card{background:var(--panel);border:1px solid rgba(255,255,255,0.12);border-radius:16px;box-shadow:var(--shadow);width:min(860px,92vw);max-height:82vh;overflow:auto;padding:16px}
+#panel-buzon .modal-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:10px}
+#panel-buzon .modal-title{font-weight:900}
+#panel-buzon .modal-sub{color:var(--muted);font-size:12px;margin-top:2px}
+#panel-buzon .modal-body .block{white-space:pre-wrap;font-family:'IBM Plex Mono', monospace;font-size:12px;line-height:1.35;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:12px;border-radius:12px}
+
+
+/* ===== Mobile usability patch: modales legibles + notas visibles ===== */
+#panel-buzon .modal-card{
+  background: rgba(255,255,255,0.92) !important;
+  color: #111 !important;
+}
+#panel-buzon .modal-title, 
+#panel-buzon .modal-sub,
+#panel-buzon .modal-body{
+  color:#111 !important;
+}
+#panel-buzon .modal-body .block{
+  background: rgba(255,255,255,0.96) !important;
+  border-color: rgba(0,0,0,0.10) !important;
+  color:#111 !important;
+}
+#panel-buzon .modal{
+  background: rgba(0,0,0,0.55) !important;
+}
+#panel-buzon .chip{
+  background: rgba(0,0,0,0.06) !important;
+  border: 1px solid rgba(0,0,0,0.10) !important;
+  color:#111 !important;
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;gap:12px;align-items:center">
+    <div class="brand-mark"><img src="icon.png" alt="Agenda" /></div>
+    <div>
+      <h1>Agenda Personal</h1>
+      <div class="small muted">La Vida Misma</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+    <div style="display:none" class="small">Carpeta: <span id="workPath" class="muted">(no seleccionada)</span></div>
+    <button style="display:none" id="btnPickDir" class="btn-ghost">Seleccionar carpeta</button>
+    <button id="btnSaveAll" class="btn">💾 Guardar todo</button>
+  </div>
+</header>
+
+<div class="dock">
+  <div class="dock-header">
+    <div>
+      <div class="brand">Accesos rápidos</div>
+      <div class="muted small">Botones configurables a carpetas locales o enlaces en la nube</div>
+    </div>
+    <div class="dock-actions">
+      <button id="btnConfigLinks" class="btn-ghost">⚙️ Editar accesos</button>
+      <button id="btnIaHighlight" class="btn">🤖 Salida IA</button>
+    </div>
+  </div>
+  <div id="quickLinks" class="dock-links"></div>
+</div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="card">
+      <div class="brand">Navegación</div>
+      <div class="muted" style="margin-top:6px">Elegí un módulo y arrancá</div>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn-ghost" onclick="showPanel('home')">Inicio</button>
+        <button class="btn-ghost" onclick="showPanel('agenda')">Agenda</button>
+        <button class="btn-ghost" onclick="showPanel('buzon')">Buzón</button>
+        <button class="btn-ghost" onclick="showPanel('calendar')">Calendario</button>
+        <button class="btn-ghost" onclick="showPanel('files')">Archivos</button>
+        <button class="btn-ghost" onclick="showPanel('notes')">Notas</button>
+        <button class="btn-ghost" onclick="showPanel('reminders')">Recordatorios</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex-between">
+        <strong>Contactos</strong>
+        <button id="btnNewRecord" class="btn">+ Nuevo</button>
+      </div>
+      <input id="filterInput" placeholder="Buscar por nombre, teléfono, email o etiqueta" />
+      <div class="list" id="recordsList" style="margin-top:10px"></div>
+      <div class="small" style="margin-top:8px">Auto-guardado: <label><input id="autoSave" type="checkbox" checked /> sí</label></div>
+    </div>
+
+      <div class="card">
+        <strong>Backup / Import</strong>
+        <div class="muted small">Exportá o importá la base de datos completa</div>
+        <div style="margin-top:8px" class="actions">
+          <button id="btnExportJson" class="btn-ghost">Exportar JSON</button>
+          <input id="importFile" type="file" accept="application/json" style="display:none" />
+          <button id="btnImportJson" class="btn-ghost">Importar JSON</button>
+        </div>
+        <div style="margin-top:8px" class="small muted">Soporte: guardado directo en carpeta (recomendado en Chrome/Edge)</div>
+      </div>
+
+      <div class="card" id="datasetCard">
+        <strong>Salida para IA</strong>
+        <div class="muted small">Copiá un dataset limpio para usar en modelos o asistentes.</div>
+        <div class="actions" style="margin-top:10px">
+          <button id="btnCopyDataset" class="btn">Copiar dataset</button>
+          <button id="btnDownloadDataset" class="btn-ghost">Descargar JSON</button>
+        </div>
+        <div class="small muted" id="datasetStatus">Incluye los últimos registros, agenda, notas y recordatorios.</div>
+      </div>
+    </aside>
+  <!-- Main -->
+  <main style="flex:1">
+
+    <!-- Inicio -->
+    <section id="panel-home" class="card">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0">Inicio</h2>
+          <div class="small muted" id="homeGreeting">Tu día, ordenado en 30 segundos.</div>
+        </div>
+        <div class="actions">
+          <button class="btn-ghost" id="btnSetPin">🔒 Cambiar PIN</button>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:12px">
+        <div class="card" style="background:rgba(255,255,255,.03)">
+          <strong>Captura rápida</strong>
+          <div class="small muted" style="margin-top:6px">Escribí una idea y elegí a dónde va. Cero vueltas.</div>
+
+          <div class="grid" style="margin-top:10px">
+            <input id="quickText" placeholder="Ej: dentista, pagar internet, idea para el finde…" />
+            <select id="quickType">
+              <option value="note">Nota</option>
+              <option value="agenda">Evento (agenda)</option>
+              <option value="reminder">Recordatorio</option>
+              <option value="record">Contacto</option>
+            </select>
+          </div>
+
+          <div class="grid" style="margin-top:10px">
+            <input id="quickDate" type="date" />
+            <input id="quickTime" type="time" />
+          </div>
+
+          <div class="actions" style="margin-top:10px">
+            <button id="btnQuickAdd" class="btn">Agregar</button>
+            <button id="btnQuickClear" class="btn-ghost">Limpiar</button>
+          </div>
+
+          <div class="small muted" style="margin-top:8px" id="quickHint">
+            Tip: si elegís “Nota”, no hace falta fecha. Si elegís “Evento/Recordatorio”, poné fecha y listo.
+          </div>
+        </div>
+
+        <div class="card" style="background:rgba(255,255,255,.03)">
+          <strong>Hoy</strong>
+          <div class="small muted" style="margin-top:6px">Agenda + recordatorios de hoy (y vencidos).</div>
+          <div class="list" id="todayList" style="margin-top:10px"></div>
+          <div class="small muted" id="todayEmpty" style="margin-top:8px;display:none">Nada para hoy. ¿Metemos algo rápido?</div>
+          <div class="actions" style="margin-top:10px">
+            <button class="btn-ghost" id="btnGoAgenda">Abrir agenda</button>
+            <button class="btn-ghost" id="btnGoReminders">Abrir recordatorios</button>
+          </div>
+        </div>
+
+        <div class="card" style="background:rgba(255,255,255,.03)">
+          <strong>Lo que viene</strong>
+          <div class="small muted" style="margin-top:6px">Próximos 7 días (agenda + recordatorios).</div>
+          <div class="list" id="nextList" style="margin-top:10px"></div>
+          <div class="small muted" id="nextEmpty" style="margin-top:8px;display:none">Tranqui: no hay nada programado por ahora.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agenda -->
+    <section id="panel-agenda" class="card">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0">Agenda</h2>
+          <div class="small muted">Planificá reuniones, entrevistas y seguimientos</div>
+        </div>
+        <div class="small muted" id="todayLabel"></div>
+      </div>
+
+      <div style="margin-top:12px" class="flex">
+        <input id="agendaTitle" placeholder="Título: Reunión con familia / Acta" />
+        <input id="agendaDate" type="date" style="width:190px" />
+        <input id="agendaTime" type="time" style="width:120px" />
+      </div>
+      <textarea id="agendaNotes" placeholder="Detalles, participantes, acuerdos..." style="margin-top:10px"></textarea>
+      <div style="margin-top:8px"><input id="agendaFilter" placeholder="Buscar por fecha (YYYY-MM-DD) o palabra clave" /></div>
+      <div style="margin-top:8px"><input id="agendaFileInput" type="file" accept=".pdf,image/*,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" /></div>
+      <div class="actions">
+        <button id="btnAddAgenda" class="btn">Agregar a agenda</button>
+        <button id="btnExportAgenda" class="btn-ghost">Exportar CSV</button>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)" />
+      <div id="agendaList" class="list"></div>
+    </section>
+
+    <!-- Calendario -->
+    <section id="panel-calendar" class="card" style="margin-top:14px;display:none">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0">Calendario</h2>
+          <div class="small muted">Vista semanal y mensual con alarmas rápidas por día</div>
+        </div>
+        <div class="calendar-nav">
+          <button id="btnPrevMonth" class="btn-ghost" style="padding:6px 8px">◀</button>
+          <div id="calendarMonthLabel" class="badge">—</div>
+          <button id="btnNextMonth" class="btn-ghost" style="padding:6px 8px">▶</button>
+        </div>
+      </div>
+
+      <div class="calendar-wrap">
+        <div class="calendar-month">
+          <div class="calendar-weekdays">
+            <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+          </div>
+          <div id="calendarGrid" class="calendar-grid"></div>
+          <div class="small muted" style="margin-top:8px">Click en un día para ver agenda/recordatorios y sumar una alarma.</div>
+        </div>
+        <div>
+          <div class="small muted">Semana en curso</div>
+          <div id="calendarWeekList" class="week-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Files -->
+    <section id="panel-files" class="card" style="margin-top:14px;display:none">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0">Archivos (PDF)</h2>
+          <div class="small muted">Adjuntá actas, informes y documentos al registro</div>
+        </div>
+        <div><input id="fileInput" type="file" accept="application/pdf" /></div>
+      </div>
+
+      <div id="filesList" class="list" style="margin-top:12px"></div>
+    </section>
+
+    <!-- Notes -->
+    <section id="panel-notes" class="card" style="margin-top:14px;display:none">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0">Notas rápidas</h2>
+          <div class="small muted">Notas diarias y actas breves</div>
+        </div>
+        <div class="small muted" id="notesSaved">—</div>
+      </div>
+      <textarea id="notesArea" placeholder="Escribí una nota rápida..."></textarea>
+      <div class="actions">
+        <button id="btnSaveNote" class="btn">Guardar nota</button>
+        <button id="btnDownloadNotes" class="btn-ghost">Descargar .txt</button>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)" />
+      <div id="notesList" class="list"></div>
+    </section>
+
+    <!-- Reminders -->
+    <section id="panel-reminders" class="card" style="margin-top:14px;display:none">
+      <div class="flex-between">
+        <div>
+          <h2 style="margin:0">Recordatorios</h2>
+          <div class="small muted">Alertas y tareas con fecha y hora</div>
+        </div>
+        <div class="small muted" id="nextReminder">Próximo: —</div>
+      </div>
+
+      <div style="margin-top:12px" class="flex">
+        <input id="remTitle" placeholder="Título del recordatorio" />
+        <input id="remDate" type="date" style="width:190px" />
+        <input id="remTime" type="time" style="width:120px" />
+      </div>
+      <textarea id="remNotes" placeholder="Detalles..." style="margin-top:10px"></textarea>
+      <div class="actions" style="margin-top:8px">
+        <button id="btnAddRem" class="btn">Agregar recordatorio</button>
+        <button id="btnExportRem" class="btn-ghost">Exportar CSV</button>
+      </div>
+
+      <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.04)" />
+      <div id="remList" class="list"></div>
+    </section>
+  
+    <!-- Buzón -->
+    <section id="panel-buzon" class="card">
+<div class="wrap" id="bx_app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="t">Buzón Personal</div>
+        <div class="s">Captura rápida • Orden • IA</div>
+      </div>
+      <div class="top-actions">
+        <button class="btn ghost" id="bx_aiBtn" type="button">AI / Memory Base</button>
+        <button class="btn ghost" id="bx_exportBtn" type="button">Exportar</button>
+        <button class="btn ghost" id="bx_importBtn" type="button">Importar</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Captura -->
+      <div class="card">
+        <div class="row" style="align-items:flex-start;">
+          <div>
+            <div style="font-weight:900;letter-spacing:.15px;">Entrada rápida</div>
+            <div class="muted">Escribí todo como te salga. Después lo leés, editás y ordenás.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <textarea id="bx_quickText" placeholder="Ej: Bioparque: quedó pendiente revisar el candado del Sector 2. Mañana avisar a Veterinaria por tratamiento..." ></textarea>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <button class="btn primary shrink" id="bx_saveQuickBtn" type="button">Guardar</button>
+          <div class="muted" id="bx_saveHint">Se guarda en este dispositivo.</div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row">
+          <input id="bx_searchInput" placeholder="Buscar…" />
+          <select id="bx_categoryFilter" style="max-width:260px;">
+            <option value="all">Todas las categorías</option>
+          </select>
+          <select id="bx_statusFilter" style="max-width:200px;">
+            <option value="all">Todo</option>
+            <option value="open">Pendiente</option>
+            <option value="done">Hecho</option>
+          </select>
+        </div>
+
+        <div class="muted" style="margin-top:8px;">
+          Tip: tocá una tarjeta para leer completo. Desde ahí podés <b>editar</b>, <b>marcar hecho</b> o <b>borrar</b>.
+        </div>
+      </div>
+
+      <!-- Lista -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+          <div>
+            <div style="font-weight:900;letter-spacing:.15px;">Buzón</div>
+            <div class="muted" id="bx_counts">—</div>
+          </div>
+          <button class="btn danger shrink" id="bx_clearDoneBtn" type="button" title="Elimina solo los marcados como Hecho">Limpiar Hechos</button>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="list" id="bx_list"></div>
+
+        <div class="muted" style="margin-top:10px;">
+          Nota: esto es <b>personal y privado</b> en tu equipo. Para sincronizar con otros, después lo conectamos a una base central.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de lectura/edición -->
+  <div class="modal" id="bx_entryModal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="bx_modalTitle">Entrada</div>
+          <div class="modal-sub" id="bx_modalSub"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <button class="btn secondary smallbtn" id="bx_modalCloseBtn" type="button">Cerrar</button>
+        </div>
+      </div>
+      <div class="modal-body" id="bx_modalBody"></div>
+    </div>
+  </div>
+
+  </div>
+
+  <input type="file" id="bx_importFile" accept="application/json" style="display:none;" />
+    </section>
+
+</main>
+</div>
+
+<footer>Agenda local y portable · Se guarda en tu dispositivo · Exportá/importá cuando quieras</footer>
+
+<div id="notificacion">Guardado con éxito ✅</div>
+
+<div id="agendaBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="small muted">Agenda</div>
+        <h3 id="agendaModalTitle" style="margin:2px 0 0"></h3>
+      </div>
+      <button id="agendaModalClose" class="modal-close">Cerrar</button>
+    </div>
+    <div class="small muted" id="agendaModalDate"></div>
+    <p id="agendaModalNotes" style="line-height:1.5"></p>
+    <div id="agendaModalFiles"></div>
+  </div>
+</div>
+
+
+
+<div id="profileBackdrop" class="modal-backdrop">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="small muted">Bienvenido</div>
+        <h3 style="margin:2px 0 0">Hacé tuya esta agenda</h3>
+      </div>
+      <button id="profileClose" class="modal-close">Omitir</button>
+    </div>
+
+    <div class="small muted" style="margin-bottom:10px">
+      Estos datos son solo para personalizar tu experiencia.
+    </div>
+
+    <input id="profileName" placeholder="Tu nombre" />
+    <input id="profileUse" placeholder="¿Para qué la vas a usar? (trabajo, estudio, personal…)" />
+
+    <div class="actions">
+      <button id="profileSave" class="btn">Guardar</button>
+    </div>
+  </div>
+
+
+
+</div>
+
+<div id="pinBackdrop" class="modal-backdrop" style="display:none">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div>
+        <div class="small muted" id="pinModeLabel">Privacidad</div>
+        <h3 style="margin:2px 0 0" id="pinTitle">Ingresá tu PIN</h3>
+      </div>
+      <button id="pinClose" class="modal-close">Omitir</button>
+    </div>
+
+    <div class="small muted" style="margin-bottom:10px" id="pinHelp">
+      Este PIN es local (solo en este dispositivo). No lo compartimos con nadie.
+    </div>
+
+    <input id="pinInput" inputmode="numeric" maxlength="4" placeholder="PIN de 4 dígitos" />
+
+    <div id="pinConfirmWrap" style="display:none; margin-top:10px">
+      <input id="pinConfirm" inputmode="numeric" maxlength="4" placeholder="Repetí el PIN" />
+    </div>
+
+    <div class="actions" style="margin-top:12px">
+      <button id="pinOk" class="btn">Aceptar</button>
+      <button id="pinLater" class="btn-ghost">Más tarde</button>
+    </div>
+
+    <div class="small muted" style="margin-top:10px" id="pinError" aria-live="polite"></div>
+  </div>
+</div>
+
+<script>
+/* Base: mantuve la lógica que ya tenías. Añadí botones Editar/Borrar (discretos) y persistencia inmediata donde corresponde. */
+
+// ---------- Data model ----------
+let DATA = {
+  records: [],
+  agenda: [],
+  notes: [],
+  reminders: []
+};
+
+const LS_KEY = 'agenda_directiva_v1';
+let WORK_DIR_HANDLE = null;
+let supportsFs = ('showDirectoryPicker' in window);
+const dataFiles = {
+  records: 'data/records.json',
+  agenda: 'data/agenda.json',
+  notes: 'data/notes.json',
+  reminders: 'data/reminders.json'
+};
+
+// ---------- Elements ----------
+const btnPickDir = document.getElementById('btnPickDir');
+const workPathEl = document.getElementById('workPath');
+const btnSaveAll = document.getElementById('btnSaveAll');
+const btnConfigLinks = document.getElementById('btnConfigLinks');
+const quickLinksEl = document.getElementById('quickLinks');
+const btnIaHighlight = document.getElementById('btnIaHighlight');
+const btnExportJson = document.getElementById('btnExportJson');
+const btnImportJson = document.getElementById('btnImportJson');
+const importFile = document.getElementById('importFile');
+const btnCopyDataset = document.getElementById('btnCopyDataset');
+const btnDownloadDataset = document.getElementById('btnDownloadDataset');
+const datasetStatus = document.getElementById('datasetStatus');
+const datasetCard = document.getElementById('datasetCard');
+const fileInput = document.getElementById('fileInput');
+const agendaBackdrop = document.getElementById('agendaBackdrop');
+const agendaModalClose = document.getElementById('agendaModalClose');
+const agendaModalTitle = document.getElementById('agendaModalTitle');
+const agendaModalDate = document.getElementById('agendaModalDate');
+const agendaModalNotes = document.getElementById('agendaModalNotes');
+const agendaModalFiles = document.getElementById('agendaModalFiles');
+
+const recordsListEl = document.getElementById('recordsList');
+const filterInput = document.getElementById('filterInput');
+const btnNewRecord = document.getElementById('btnNewRecord');
+
+const todayLabel = document.getElementById('todayLabel');
+const agendaTitle = document.getElementById('agendaTitle');
+const agendaDate = document.getElementById('agendaDate');
+const agendaTime = document.getElementById('agendaTime');
+const agendaNotes = document.getElementById('agendaNotes');
+const btnAddAgenda = document.getElementById('btnAddAgenda');
+const agendaList = document.getElementById('agendaList');
+const btnExportAgenda = document.getElementById('btnExportAgenda');
+const agendaFilter = document.getElementById('agendaFilter');
+const agendaFileInput = document.getElementById('agendaFileInput');
+
+const filesList = document.getElementById('filesList');
+
+const notesArea = document.getElementById('notesArea');
+const btnSaveNote = document.getElementById('btnSaveNote');
+const btnDownloadNotes = document.getElementById('btnDownloadNotes');
+const notesList = document.getElementById('notesList');
+const notesSavedLabel = document.getElementById('notesSaved');
+
+const remTitle = document.getElementById('remTitle');
+const remDate = document.getElementById('remDate');
+const remTime = document.getElementById('remTime');
+const remNotes = document.getElementById('remNotes');
+const btnAddRem = document.getElementById('btnAddRem');
+const remList = document.getElementById('remList');
+const nextReminder = document.getElementById('nextReminder');
+const calendarGrid = document.getElementById('calendarGrid');
+const calendarWeekList = document.getElementById('calendarWeekList');
+const calendarMonthLabel = document.getElementById('calendarMonthLabel');
+const btnPrevMonth = document.getElementById('btnPrevMonth');
+const btnNextMonth = document.getElementById('btnNextMonth');
+
+const panels = {
+  buzon: document.getElementById('panel-buzon'),
+  home: document.getElementById('panel-home'),
+  agenda: document.getElementById('panel-agenda'),
+  calendar: document.getElementById('panel-calendar'),
+  files: document.getElementById('panel-files'),
+  notes: document.getElementById('panel-notes'),
+  reminders: document.getElementById('panel-reminders')
+};
+
+// ---------- Inicio (Home) ----------
+const homeGreeting = document.getElementById('homeGreeting');
+const todayList = document.getElementById('todayList');
+const todayEmpty = document.getElementById('todayEmpty');
+const nextList = document.getElementById('nextList');
+const nextEmpty = document.getElementById('nextEmpty');
+
+const quickText = document.getElementById('quickText');
+const quickType = document.getElementById('quickType');
+const quickDate = document.getElementById('quickDate');
+const quickTime = document.getElementById('quickTime');
+const btnQuickAdd = document.getElementById('btnQuickAdd');
+const btnQuickClear = document.getElementById('btnQuickClear');
+
+const btnGoAgenda = document.getElementById('btnGoAgenda');
+const btnGoReminders = document.getElementById('btnGoReminders');
+const btnSetPin = document.getElementById('btnSetPin');
+
+function getProfileSafe(){
+  try{ return JSON.parse(localStorage.getItem('agenda_user_profile_v1') || 'null'); }catch(e){ return null; }
+}
+
+function pad2(n){ return String(n).padStart(2,'0'); }
+function toYMD(d){
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function parseDT(dateStr, timeStr){
+  if(!dateStr) return null;
+  const t = (timeStr && timeStr.trim()) ? timeStr.trim() : '00:00';
+  const dt = new Date(`${dateStr}T${t}:00`);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+function isSameDay(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+function markDone(kind,id,done){
+  if(kind === 'agenda'){
+    const it = (DATA.agenda||[]).find(x=>x.id===id);
+    if(it){ it.done = done; }
+  }else{
+    const it = (DATA.reminders||[]).find(x=>x.id===id);
+    if(it){ it.done = done; }
+  }
+  writeLS();
+  renderAll();
+  renderHome();
+}
+
+function renderHome(){
+  // greeting
+  const prof = getProfileSafe();
+  const now = new Date();
+  const hh = now.getHours();
+  const saludo = hh<12 ? 'Buen día' : (hh<19 ? 'Buenas' : 'Buenas noches');
+  if(homeGreeting){
+    homeGreeting.textContent = prof?.name ? `${saludo}, ${prof.name}. ¿Qué te gustaría ordenar hoy?` : `${saludo}. ¿Qué te gustaría ordenar hoy?`;
+  }
+
+  // build items
+  const now2 = new Date();
+  const today = new Date(now2); today.setHours(0,0,0,0);
+  const end = new Date(today); end.setDate(end.getDate()+7);
+
+  const todayItems = [];
+  const nextItems = [];
+
+  // agenda
+  (DATA.agenda||[]).forEach(e=>{
+    const dt = parseDT(e.date, e.time||'');
+    if(!dt) return;
+    const d0 = new Date(dt); d0.setHours(0,0,0,0);
+
+    const base = { kind:'agenda', id:e.id, title:e.title||'(sin título)', date:e.date, time:(e.time||''), done:!!e.done };
+    if(isSameDay(d0,today)) todayItems.push(base);
+    if(dt>=today && dt<end) nextItems.push(base);
+  });
+
+  // reminders (include overdue in today)
+  (DATA.reminders||[]).forEach(r=>{
+    const dt = parseDT(r.date, r.time||'');
+    if(!dt) return;
+    const d0 = new Date(dt); d0.setHours(0,0,0,0);
+
+    const base = { kind:'reminder', id:r.id, title:r.title||'(sin título)', date:r.date, time:(r.time||''), done:!!r.done };
+    const overdue = dt < now2 && !r.done;
+
+    if(isSameDay(d0,today) || overdue) todayItems.push(base);
+    if(dt>=today && dt<end) nextItems.push(base);
+  });
+
+  const sorter = (a,b)=> (parseDT(a.date,a.time) - parseDT(b.date,b.time));
+  todayItems.sort(sorter);
+  nextItems.sort(sorter);
+
+  // render lists
+  if(todayList){
+    todayList.innerHTML = '';
+    if(todayItems.length===0){
+      if(todayEmpty) todayEmpty.style.display='block';
+    }else{
+      if(todayEmpty) todayEmpty.style.display='none';
+      todayItems.slice(0,20).forEach(it=>{
+        const when = it.date ? (it.time ? `${it.date} ${it.time}` : it.date) : '';
+        const icon = it.kind==='agenda' ? '📅' : '⏰';
+        const checked = it.done ? 'checked' : '';
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <label style="display:flex;gap:10px;align-items:center;width:100%">
+            <input type="checkbox" ${checked} />
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;gap:10px">
+                <div><strong>${icon} ${escapeHtml(it.title)}</strong></div>
+                <div class="small muted">${escapeHtml(when)}</div>
+              </div>
+            </div>
+          </label>
+        `;
+        const cb = row.querySelector('input');
+        cb.addEventListener('change', ()=> markDone(it.kind, it.id, cb.checked));
+        todayList.appendChild(row);
+      });
+    }
+  }
+
+  if(nextList){
+    nextList.innerHTML = '';
+    if(nextItems.length===0){
+      if(nextEmpty) nextEmpty.style.display='block';
+    }else{
+      if(nextEmpty) nextEmpty.style.display='none';
+      nextItems.slice(0,20).forEach(it=>{
+        const when = it.date ? (it.time ? `${it.date} ${it.time}` : it.date) : '';
+        const icon = it.kind==='agenda' ? '📅' : '⏰';
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <div style="display:flex;justify-content:space-between;gap:10px;width:100%">
+            <div><strong>${icon} ${escapeHtml(it.title)}</strong></div>
+            <div class="small muted">${escapeHtml(when)}</div>
+          </div>
+        `;
+        nextList.appendChild(row);
+      });
+    }
+  }
+}
+
+// Quick add
+function quickClear(){
+  if(quickText) quickText.value = '';
+  if(quickType) quickType.value = 'note';
+  if(quickDate) quickDate.value = '';
+  if(quickTime) quickTime.value = '';
+}
+
+function quickAdd(){
+  const t = (quickText?.value || '').trim();
+  const type = quickType?.value || 'note';
+  const date = quickDate?.value || '';
+  const time = quickTime?.value || '';
+
+  if(!t){
+    showToast('Escribí algo primero 🙂');
+    return;
+  }
+
+  if(type === 'note'){
+    DATA.notes = DATA.notes || [];
+    // Normalizamos formato: renderNotes usa n.text
+    DATA.notes.unshift({ id: uid('n'), text: t, created: nowISO() });
+    writeLS();
+    renderNotes();
+    renderHome();
+    showToast('Nota guardada ✅');
+    quickClear();
+    // Para que el usuario la vea y confíe en el guardado:
+    showPanel('notes');
+    return;
+  }
+
+  if(type === 'record'){
+    DATA.records = DATA.records || [];
+    DATA.records.unshift({ id: uid('r'), title: t, notes: '', dateCreated: nowISO(), dateModified: nowISO(), files: [], tags: ['contacto'] });
+    writeLS(); renderRecords(); renderHome(); showToast('Ficha creada ✅');
+    quickClear();
+    return;
+  }
+
+  // agenda/reminder need date
+  if(!date){
+    showToast('Sumá una fecha 🙂');
+    return;
+  }
+
+  if(type === 'agenda'){
+    DATA.agenda = DATA.agenda || [];
+    DATA.agenda.unshift({ id: uid('ag'), date, time, title: t, details: '', done:false, created: nowISO() });
+    writeLS(); renderAgenda(); renderHome(); showToast('Agendado ✅');
+    quickClear();
+    return;
+  }
+
+  if(type === 'reminder'){
+    DATA.reminders = DATA.reminders || [];
+    DATA.reminders.unshift({ id: uid('rem'), date, time, title: t, details: '', done:false, priority: 'media', created: nowISO() });
+    writeLS(); renderReminders(); updateNextReminder(); renderHome(); showToast('Recordatorio creado ✅');
+    quickClear();
+    return;
+  }
+}
+
+// Home listeners
+if(btnQuickAdd) btnQuickAdd.addEventListener('click', quickAdd);
+if(btnQuickClear) btnQuickClear.addEventListener('click', quickClear);
+
+if(btnGoAgenda) btnGoAgenda.addEventListener('click', ()=> showPanel('agenda'));
+if(btnGoReminders) btnGoReminders.addEventListener('click', ()=> showPanel('reminders'));
+
+if(btnSetPin) btnSetPin.addEventListener('click', ()=> openPinModal('setup'));
+
+
+
+// Accesos rápidos configurables
+const QUICK_LINK_KEY = 'agenda_quick_links_v1';
+const DEFAULT_QUICK_LINKS = [
+  { id:'ql1', label:'Carpeta de actas', url:'', icon:'📂' },
+  { id:'ql2', label:'Drive de informes', url:'', icon:'☁️' },
+  { id:'ql3', label:'Plantillas', url:'', icon:'🧾' }
+];
+let QUICK_LINKS = [];
+let calendarRefDate = new Date();
+
+// ---------- Utils ----------
+  function uid(prefix='id'){ return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+  function nowISO(){ return new Date().toISOString(); }
+  function readLS(){ try { const v=localStorage.getItem(LS_KEY); return v? JSON.parse(v): null; } catch(e){return null} }
+  function writeLS(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){console.error(e)} }
+  function formatDate(d){ if(!d) return '-'; return new Date(d).toLocaleDateString(); }
+  function formatISODate(d){ return d.toISOString().split('T')[0]; }
+  function startOfWeek(date){ const d = new Date(date); const day = (d.getDay()+6)%7; d.setDate(d.getDate()-day); d.setHours(0,0,0,0); return d; }
+  
+  // ---------- PIN (bloqueo local) ----------
+const PIN_KEY = 'agenda_pin_v1';
+const UNLOCK_KEY = 'agenda_unlocked_v1'; // session flag (cleared on tab close)
+
+function getPin(){
+  try { return localStorage.getItem(PIN_KEY) || ''; } catch(e){ return ''; }
+}
+function setPin(pin){
+  try { localStorage.setItem(PIN_KEY, pin); } catch(e){}
+}
+function clearUnlock(){
+  try { sessionStorage.removeItem(UNLOCK_KEY); } catch(e){}
+}
+function setUnlocked(){
+  try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
+}
+function isUnlocked(){
+  try { return sessionStorage.getItem(UNLOCK_KEY) === '1'; } catch(e){ return false; }
+}
+
+function isValidPin(pin){
+  return /^\d{4}$/.test(pin);
+}
+
+// ---------- Perfil de usuario (onboarding mínimo) ----------
+const PROFILE_KEY = 'agenda_user_profile_v1';
+
+function loadProfile(){
+  try{
+    return JSON.parse(localStorage.getItem(PROFILE_KEY));
+  }catch(e){
+    return null;
+  }
+}
+
+function saveProfile(profile){
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+  const lastItems = (arr, limit=30) => arr.slice(Math.max(0, arr.length - limit));
+  const fileToDataUrl = (file)=> new Promise((resolve, reject)=>{ const reader = new FileReader(); reader.onload = ()=> resolve(reader.result); reader.onerror = reject; reader.readAsDataURL(file); });
+
+  function loadQuickLinks(){
+    try{
+      const saved = localStorage.getItem(QUICK_LINK_KEY);
+      return saved ? JSON.parse(saved) : DEFAULT_QUICK_LINKS;
+    }catch(e){
+      return DEFAULT_QUICK_LINKS;
+    }
+  }
+
+  function saveQuickLinks(){
+    try{ localStorage.setItem(QUICK_LINK_KEY, JSON.stringify(QUICK_LINKS)); }catch(e){ console.error(e); }
+  }
+
+  function buildAiDataset(){
+    return {
+      generatedAt: nowISO(),
+      summary: {
+        records: DATA.records.length,
+        agenda: DATA.agenda.length,
+        notes: DATA.notes.length,
+        reminders: DATA.reminders.length
+      },
+      records: lastItems(DATA.records).map(r => ({
+        id: r.id,
+        title: r.title,
+        notes: r.notes,
+        dateCreated: r.dateCreated,
+        dateModified: r.dateModified,
+        tags: r.tags || [],
+        files: (r.files || []).map(f => ({ name: f.name, path: f.path || null, uploaded: f.uploaded || null }))
+      })),
+      agenda: lastItems(DATA.agenda).map(ev => ({
+        id: ev.id,
+        title: ev.title,
+        date: ev.date,
+        time: ev.time,
+        notes: ev.notes,
+        files: (ev.files || []).map(f => ({ name: f.name, path: f.path || null }))
+      })),
+      notes: lastItems(DATA.notes).map(n => ({ id: n.id, text: n.text, created: n.created })),
+      reminders: lastItems(DATA.reminders).map(r => ({ id: r.id, title: r.title, date: r.date, time: r.time, notes: r.notes }))
+    };
+  }
+
+  function updateDatasetStatus(){
+    if(!datasetStatus) return;
+    datasetStatus.textContent = `Registros: ${DATA.records.length} · Agenda: ${DATA.agenda.length} · Notas: ${DATA.notes.length} · Recordatorios: ${DATA.reminders.length}`;
+  }
+
+  function renderQuickLinks(){
+    if(!quickLinksEl) return;
+    quickLinksEl.innerHTML = '';
+    QUICK_LINKS.forEach((link, idx)=>{
+      const btn = document.createElement('button');
+      btn.className = 'dock-btn';
+      btn.innerHTML = `<div class="icon">${link.icon || '🗂️'}</div><div><div>${link.label || 'Acceso rápido'}</div><div class="dock-meta">${link.url ? link.url : 'Toca ⚙️ para configurar'}</div></div>`;
+      btn.onclick = ()=> openQuickLink(link);
+      const edit = document.createElement('button'); edit.className='edit'; edit.textContent='Editar'; edit.onclick=(e)=>{ e.stopPropagation(); configureQuickLink(idx); };
+      btn.appendChild(edit);
+      quickLinksEl.appendChild(btn);
+    });
+  }
+
+  function openQuickLink(link){
+    if(!link.url){ alert('Configura este acceso para abrir tu carpeta o enlace.'); return; }
+    try{ window.open(link.url, '_blank'); }catch(e){ alert('No se pudo abrir el acceso. Verificá la URL o ruta.'); }
+  }
+
+  function configureQuickLink(idx){
+    const current = QUICK_LINKS[idx];
+    const label = prompt('Nombre visible del acceso', current.label || '') ;
+    if(label === null) return;
+    const url = prompt('Ruta o enlace (https://, file:/// o carpeta en la nube)', current.url || '');
+    if(url === null) return;
+    const icon = prompt('Emoji/ícono (opcional)', current.icon || '');
+    if(icon === null) return;
+    QUICK_LINKS[idx] = { ...current, label: label.trim() || `Acceso ${idx+1}`, url: url.trim(), icon: icon.trim() || current.icon || '🗂️' };
+    saveQuickLinks();
+    renderQuickLinks();
+    showToast('Acceso actualizado');
+  }
+
+  function configureAllQuickLinks(){
+    QUICK_LINKS.forEach((_, idx)=> configureQuickLink(idx));
+  }
+
+  function highlightDatasetPanel(){
+    if(datasetCard){
+      datasetCard.classList.add('glow');
+      datasetCard.scrollIntoView({ behavior:'smooth', block:'center' });
+      setTimeout(()=> datasetCard.classList.remove('glow'), 1400);
+    }
+  }
+
+// ---------- File system helpers ----------
+async function pickWorkDir(){
+  if(!supportsFs) { alert('Tu navegador no soporta acceso directo a disco. Usá Chrome o Edge para esa función.'); return; }
+  try{
+    WORK_DIR_HANDLE = await window.showDirectoryPicker();
+    workPathEl.textContent = WORK_DIR_HANDLE.name || 'seleccionada';
+    await ensureDir('data');
+    await ensureDir('pdf');
+    await loadAllFromDisk();
+    alert('Carpeta de trabajo seleccionada: ' + WORK_DIR_HANDLE.name);
+  }catch(err){
+    console.error(err);
+    alert('No se seleccionó carpeta.');
+  }
+}
+
+async function ensureDir(path){
+  const parts = path.split('/').filter(Boolean);
+  let handle = WORK_DIR_HANDLE;
+  for(const p of parts){
+    handle = await handle.getDirectoryHandle(p, { create: true });
+  }
+  return handle;
+}
+
+async function writeJsonToDisk(relativePath, obj){
+  if(!supportsFs || !WORK_DIR_HANDLE) {
+    const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = relativePath.replace(/\//g,'_');
+    a.click();
+    URL.revokeObjectURL(a.href);
+    return;
+  }
+  const parts = relativePath.split('/');
+  const filename = parts.pop();
+  let dir = WORK_DIR_HANDLE;
+  for(const p of parts){
+    dir = await dir.getDirectoryHandle(p, { create: true });
+  }
+  const fh = await dir.getFileHandle(filename, { create: true });
+  const writable = await fh.createWritable();
+  await writable.write(JSON.stringify(obj, null, 2));
+  await writable.close();
+}
+
+async function readJsonFromDisk(relativePath){
+  if(!supportsFs || !WORK_DIR_HANDLE) return null;
+  try{
+    const parts = relativePath.split('/');
+    const filename = parts.pop();
+    let dir = WORK_DIR_HANDLE;
+    for(const p of parts){
+      dir = await dir.getDirectoryHandle(p, { create: false });
+    }
+    const fh = await dir.getFileHandle(filename, { create: false });
+    const file = await fh.getFile();
+    const text = await file.text();
+    return JSON.parse(text);
+  }catch(e){
+    return null;
+  }
+}
+
+async function saveFileToPdfFolder(file){
+  if(!supportsFs || !WORK_DIR_HANDLE){
+    const dataUrl = await fileToDataUrl(file);
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = file.name;
+    a.click();
+    return { saved: false, name: file.name, dataUrl };
+  }
+  const pdfDir = await ensureDir('pdf');
+  const fh = await pdfDir.getFileHandle(file.name, { create: true });
+  const writable = await fh.createWritable();
+  await writable.write(await file.arrayBuffer());
+  await writable.close();
+  return { saved: true, name: file.name, path: 'pdf/' + file.name };
+}
+
+// ---------- Load/Save DB ----------
+async function loadAllFromDisk(){
+  const a = await readJsonFromDisk(dataFiles.records);
+  const b = await readJsonFromDisk(dataFiles.agenda);
+  const c = await readJsonFromDisk(dataFiles.notes);
+  const d = await readJsonFromDisk(dataFiles.reminders);
+  if(a) DATA.records = a;
+  if(b) DATA.agenda = b;
+  if(c) DATA.notes = c;
+  if(d) DATA.reminders = d;
+  renderAll();
+  writeLS();
+}
+
+async function saveAllToDisk(){
+  await writeJsonToDisk(dataFiles.records, DATA.records);
+  await writeJsonToDisk(dataFiles.agenda, DATA.agenda);
+  await writeJsonToDisk(dataFiles.notes, DATA.notes);
+  await writeJsonToDisk(dataFiles.reminders, DATA.reminders);
+  writeLS();
+  showToast('Guardado con éxito ✅' + (WORK_DIR_HANDLE ? ' en carpeta seleccionada.' : ' (descargado como archivos JSON).'));
+}
+
+// ---------- Rendering ----------
+  function renderAll(){
+    renderRecords();
+    renderFilesList();
+    renderAgenda();
+    renderNotes();
+    renderReminders();
+    renderCalendarViews();
+    updateToday();
+    updateDatasetStatus();
+  }
+
+function showPanel(name){
+    Object.values(panels).forEach(p => p.style.display = 'none');
+    panels[name].style.display = 'block';
+    if(name === 'notes' && notesArea){
+      notesArea.focus();
+      notesArea.setSelectionRange(notesArea.value.length, notesArea.value.length);
+    }
+  }
+
+function renderRecords(filter=''){
+    recordsListEl.innerHTML = '';
+    const q = (filter||'').trim().toLowerCase();
+    DATA.records.slice().reverse().forEach(r=>{
+    if(q){
+      if(!( (r.title||'').toLowerCase().includes(q) || (r.notes||'').toLowerCase().includes(q) || (r.tags||[]).join(' ').toLowerCase().includes(q) )) return;
+    }
+    const left = document.createElement('div'); left.className='item-left';
+    left.innerHTML = `<strong>${r.title||'(sin título)'}</strong><div class="meta">${formatDate(r.dateCreated)} · ${r.tags? r.tags.join(', ') : ''}</div><div style="margin-top:6px">${(r.notes||'').slice(0,250)}</div>`;
+    const controls = document.createElement('div'); controls.className='item-controls';
+    const btnEdit = document.createElement('button'); btnEdit.className='ctrl-btn'; btnEdit.textContent='Editar';
+    const btnDel = document.createElement('button'); btnDel.className='ctrl-btn'; btnDel.textContent='Eliminar';
+    btnEdit.onclick = (e)=>{ e.stopPropagation(); openRecord(r.id); };
+    btnDel.onclick = (e)=>{ e.stopPropagation(); if(confirm('Borrar registro?')){ DATA.records = DATA.records.filter(x=>x.id!==r.id); writeLS(); renderRecords(filter); renderFilesList(); } };
+    controls.appendChild(btnEdit); controls.appendChild(btnDel);
+    const wrapper = document.createElement('div'); wrapper.className='item';
+      wrapper.appendChild(left); wrapper.appendChild(controls);
+      wrapper.onclick = ()=> openRecord(r.id);
+      recordsListEl.appendChild(wrapper);
+    });
+    updateDatasetStatus();
+  }
+
+function openRecord(id){
+  const r = DATA.records.find(x=>x.id===id);
+  if(!r) return;
+  const newTitle = prompt('Nombre del contacto', r.title || '');
+  if(newTitle === null) return;
+  r.title = newTitle;
+  const newNotes = prompt('Notas (teléfono, email, datos útiles)', r.notes || '');
+  if(newNotes === null) return;
+  r.notes = newNotes;
+  r.dateModified = nowISO();
+  writeLS();
+  renderRecords(filterInput.value);
+}
+function renderAgenda(filter=''){
+  agendaList.innerHTML = '';
+  const q = (filter||'').trim().toLowerCase();
+  const list = DATA.agenda.slice().sort((a,b)=> (a.date||'').localeCompare(b.date));
+  list.forEach(ev=>{
+    if(q){
+      const matchDate = (ev.date||'').toLowerCase().includes(q);
+      const matchText = (((ev.title||'') + ' ' + (ev.notes||'') + ' ' + ((ev.files||[]).map(f=>f.name||'').join(' '))).toLowerCase());
+      if(!(matchDate || matchText.includes(q))) return;
+    }
+    const left = document.createElement('div'); left.className='item-left';
+    let filesHtml = '';
+    if(ev.files && ev.files.length){
+      filesHtml = '<div class="meta"><strong>Archivos:</strong><ul style="margin:6px 0 0 14px;padding:0;">';
+      ev.files.forEach(f=> filesHtml += '<li style="margin-bottom:4px">' + (f.name||f) + '</li>');
+      filesHtml += '</ul></div>';
+    }
+    left.innerHTML = `<strong>${ev.title}</strong><div class="meta">${formatDate(ev.date)} ${ev.time? ev.time : ''}</div><div style="margin-top:6px">${(ev.notes||'').slice(0,400)}</div>${filesHtml}`;
+      const controls = document.createElement('div'); controls.className='item-controls';
+      const btnEdit = document.createElement('button'); btnEdit.className='ctrl-btn'; btnEdit.textContent='Editar';
+      const btnDel = document.createElement('button'); btnDel.className='ctrl-btn'; btnDel.textContent='Eliminar';
+      btnEdit.onclick = (e)=>{ e.stopPropagation(); editAgenda(ev.id); };
+      btnDel.onclick = (e)=>{ e.stopPropagation(); if(confirm('Borrar evento de agenda?')){ DATA.agenda = DATA.agenda.filter(x=>x.id!==ev.id); writeLS(); renderAgenda(agendaFilter.value); } };
+      controls.appendChild(btnEdit); controls.appendChild(btnDel);
+        const wrapper = document.createElement('div'); wrapper.className='item';
+        wrapper.appendChild(left); wrapper.appendChild(controls);
+        wrapper.onclick = ()=> openAgendaDetail(ev.id);
+        agendaList.appendChild(wrapper);
+      });
+      updateDatasetStatus();
+    }
+
+function editAgenda(id){
+  const ev = DATA.agenda.find(x=>x.id===id);
+  if(!ev) return;
+  const t = prompt('Título', ev.title);
+  if(t===null) return;
+  ev.title = t;
+  const d = prompt('Fecha (YYYY-MM-DD)', ev.date || '');
+  if(d===null) return;
+  ev.date = d;
+  const tm = prompt('Hora (HH:MM)', ev.time || '');
+  if(tm===null) return;
+  ev.time = tm;
+  const n = prompt('Notas', ev.notes || '');
+  if(n===null) return;
+  ev.notes = n;
+  ev.modified = nowISO();
+  writeLS();
+  renderAgenda(agendaFilter.value);
+}
+
+  function renderNotes(){
+    notesList.innerHTML = '';
+    DATA.notes.slice().reverse().forEach(n=>{
+      const left = document.createElement('div'); left.className='item-left';
+      left.innerHTML = `<div class="meta">${formatDate(n.created)}</div><div style="margin-top:6px">${n.text}</div>`;
+    const controls = document.createElement('div'); controls.className='item-controls';
+    const btnDel = document.createElement('button'); btnDel.className='ctrl-btn'; btnDel.textContent='Eliminar';
+    btnDel.onclick = (e)=>{ e.stopPropagation(); if(!confirm('Borrar nota?')) return; DATA.notes = DATA.notes.filter(x=>x.id!==n.id); writeLS(); renderNotes(); };
+    controls.appendChild(btnDel);
+    const wrapper = document.createElement('div'); wrapper.className='item';
+      wrapper.appendChild(left); wrapper.appendChild(controls);
+      notesList.appendChild(wrapper);
+    });
+    if((DATA.notes||[]).length===0) notesList.innerHTML = '<div class="small muted">Sin notas</div>';
+    if(notesSavedLabel){
+      const lastNote = DATA.notes[DATA.notes.length-1];
+      notesSavedLabel.textContent = lastNote ? `Última nota: ${new Date(lastNote.created).toLocaleString()}` : '—';
+    }
+    updateDatasetStatus();
+  }
+
+function renderReminders(){
+  remList.innerHTML = '';
+  DATA.reminders.slice().sort((a,b)=> (a.date||'').localeCompare(b.date)).forEach(r=>{
+    const left = document.createElement('div'); left.className='item-left';
+    left.innerHTML = `<strong>${r.title}</strong><div class="meta">${formatDate(r.date)} ${r.time||''}</div><div style="margin-top:6px">${(r.notes||'')}</div>`;
+    const controls = document.createElement('div'); controls.className='item-controls';
+    const btnEdit = document.createElement('button'); btnEdit.className='ctrl-btn'; btnEdit.textContent='Editar';
+    const btnDel = document.createElement('button'); btnDel.className='ctrl-btn'; btnDel.textContent='Eliminar';
+    btnEdit.onclick = (e)=>{ e.stopPropagation(); editReminder(r.id); };
+    btnDel.onclick = (e)=>{ e.stopPropagation(); if(!confirm('Borrar recordatorio?')) return; DATA.reminders = DATA.reminders.filter(x=>x.id!==r.id); writeLS(); renderReminders(); };
+    controls.appendChild(btnEdit); controls.appendChild(btnDel);
+    const wrapper = document.createElement('div'); wrapper.className='item';
+    wrapper.appendChild(left); wrapper.appendChild(controls);
+    remList.appendChild(wrapper);
+  });
+  updateNextReminder();
+  updateDatasetStatus();
+}
+
+function renderCalendarViews(){
+  renderMonthlyGrid();
+  renderWeekList();
+}
+
+function renderMonthlyGrid(){
+  if(!calendarGrid || !calendarMonthLabel) return;
+  calendarGrid.innerHTML = '';
+  const ref = new Date(calendarRefDate);
+  const year = ref.getFullYear();
+  const month = ref.getMonth();
+  const firstDay = new Date(year, month, 1);
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startOffset = (firstDay.getDay() + 6) % 7;
+  calendarMonthLabel.textContent = ref.toLocaleDateString('es-ES', { month:'long', year:'numeric' });
+
+  for(let i=0;i<startOffset;i++){
+    const empty = document.createElement('div');
+    empty.className = 'day-cell day-empty';
+    calendarGrid.appendChild(empty);
+  }
+
+  for(let day=1; day<=daysInMonth; day++){
+    const dateObj = new Date(year, month, day);
+    const dateStr = formatISODate(dateObj);
+    const agendaItems = DATA.agenda.filter(ev=> ev.date === dateStr);
+    const reminderItems = DATA.reminders.filter(r=> r.date === dateStr);
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    if(formatISODate(new Date()) === dateStr) cell.classList.add('day-today');
+    cell.innerHTML = `<div class="day-num">${day}</div>`;
+    const tags = document.createElement('div'); tags.className='day-tags';
+    if(agendaItems.length) tags.innerHTML += `<span class="day-tag">Agenda ×${agendaItems.length}</span>`;
+    if(reminderItems.length) tags.innerHTML += `<span class="day-tag">Alarmas ×${reminderItems.length}</span>`;
+    cell.appendChild(tags);
+    cell.onclick = ()=> handleDayClick(dateStr, agendaItems, reminderItems);
+    calendarGrid.appendChild(cell);
+  }
+}
+
+function renderWeekList(){
+  if(!calendarWeekList) return;
+  calendarWeekList.innerHTML = '';
+  const start = startOfWeek(new Date());
+  for(let i=0;i<7;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const dateStr = formatISODate(d);
+    const agendaItems = DATA.agenda.filter(ev=> ev.date === dateStr);
+    const reminderItems = DATA.reminders.filter(r=> r.date === dateStr);
+    const item = document.createElement('div'); item.className='week-item';
+    item.innerHTML = `<div><strong>${d.toLocaleDateString('es-ES', { weekday:'short', day:'numeric' })}</strong><div class="week-meta">${d.toLocaleDateString()}</div></div><div class="week-events">${agendaItems.length} agenda · ${reminderItems.length} alarmas</div>`;
+    item.onclick = ()=> handleDayClick(dateStr, agendaItems, reminderItems);
+    calendarWeekList.appendChild(item);
+  }
+}
+
+function handleDayClick(dateStr, agendaItems=[], reminderItems=[]){
+  const agendaText = agendaItems.map(a=> `• ${a.title || 'Agenda'} (${a.time||''})`).join('\n') || '—';
+  const remText = reminderItems.map(r=> `• ${r.title || 'Recordatorio'} ${r.time||''}`).join('\n') || '—';
+  const ask = confirm(`Día ${dateStr}\n\nAgenda (${agendaItems.length})\n${agendaText}\n\nRecordatorios (${reminderItems.length})\n${remText}\n\n¿Agregar una alarma/recordatorio para este día?`);
+  if(!ask) return;
+  const title = prompt('Título del recordatorio', 'Alarma');
+  if(title === null || !title.trim()) return;
+  const time = prompt('Hora (HH:MM opcional)', '08:00');
+  if(time === null) return;
+  const notes = prompt('Notas u observaciones (opcional)', '');
+  if(notes === null) return;
+  DATA.reminders.push({ id: uid('rem'), title: title.trim(), date: dateStr, time: (time||'').trim(), notes: (notes||'').trim(), created: nowISO() });
+  writeLS();
+  renderReminders();
+  renderCalendarViews();
+  showToast('Alarma guardada en recordatorios');
+}
+
+function editReminder(id){
+  const r = DATA.reminders.find(x=>x.id===id);
+  if(!r) return;
+  const t = prompt('Título', r.title); if(t===null) return; r.title = t;
+  const d = prompt('Fecha (YYYY-MM-DD)', r.date || ''); if(d===null) return; r.date = d;
+  const tm = prompt('Hora (HH:MM)', r.time || ''); if(tm===null) return; r.time = tm;
+  const n = prompt('Notas', r.notes || ''); if(n===null) return; r.notes = n;
+  r.modified = nowISO(); writeLS(); renderReminders();
+}
+
+function updateToday(){
+  todayLabel.textContent = new Date().toLocaleDateString();
+}
+
+// ---------- Actions & listeners ----------
+
+// ---------- PIN modal listeners ----------
+const pinBackdrop = document.getElementById('pinBackdrop');
+const pinModeLabel = document.getElementById('pinModeLabel');
+const pinTitle = document.getElementById('pinTitle');
+const pinHelp = document.getElementById('pinHelp');
+const pinInput = document.getElementById('pinInput');
+const pinConfirmWrap = document.getElementById('pinConfirmWrap');
+const pinConfirm = document.getElementById('pinConfirm');
+const pinOk = document.getElementById('pinOk');
+const pinClose = document.getElementById('pinClose');
+const pinLater = document.getElementById('pinLater');
+const pinError = document.getElementById('pinError');
+
+let pinMode = 'unlock'; // 'unlock' | 'setup'
+
+function openPinModal(mode){
+  pinMode = mode;
+  if(!pinBackdrop) return;
+  pinBackdrop.style.display = 'flex';
+  if(pinError) pinError.textContent = '';
+  if(pinInput) pinInput.value = '';
+  if(pinConfirm) pinConfirm.value = '';
+
+  if(mode === 'setup'){
+    if(pinModeLabel) pinModeLabel.textContent = 'Privacidad';
+    if(pinTitle) pinTitle.textContent = 'Creá tu PIN (4 dígitos)';
+    if(pinHelp) pinHelp.textContent = 'Este PIN es local (solo en este dispositivo). Si lo olvidás, hay que borrar datos del navegador.';
+    if(pinConfirmWrap) pinConfirmWrap.style.display = 'block';
+    if(pinClose) pinClose.textContent = 'Omitir';
+  
+    if(pinLater) pinLater.style.display = 'none';
+    if(pinClose) pinClose.style.display = 'none';
+  }else{
+    if(pinModeLabel) pinModeLabel.textContent = 'Privacidad';
+    if(pinTitle) pinTitle.textContent = 'Ingresá tu PIN';
+    if(pinHelp) pinHelp.textContent = 'Escribí tu PIN para desbloquear la agenda.';
+    if(pinConfirmWrap) pinConfirmWrap.style.display = 'none';
+    
+    if(pinLater) pinLater.style.display = 'none';
+    if(pinClose) pinClose.style.display = 'inline-flex';
+if(pinClose) pinClose.textContent = 'Salir';
+  }
+}
+
+function closePinModal(){
+  if(pinBackdrop) pinBackdrop.style.display = 'none';
+}
+
+function tryUnlockPin(){
+  const stored = getPin();
+  const entered = (pinInput?.value || '').trim();
+
+  if(!isValidPin(entered)){
+    if(pinError) pinError.textContent = 'El PIN debe tener 4 números.';
+    return;
+  }
+
+  if(entered !== stored){
+    if(pinError) pinError.textContent = 'PIN incorrecto. Probá otra vez.';
+    return;
+  }
+
+  setUnlocked();
+  closePinModal();
+  if(window.showToast) showToast('Desbloqueado ✅');
+}
+
+function trySetupPin(){
+  const p1 = (pinInput?.value || '').trim();
+  const p2 = (pinConfirm?.value || '').trim();
+
+  if(!isValidPin(p1)){
+    if(pinError) pinError.textContent = 'El PIN debe tener 4 números.';
+    return;
+  }
+  if(p1 !== p2){
+    if(pinError) pinError.textContent = 'Los PIN no coinciden.';
+    return;
+  }
+
+  setPin(p1);
+  setUnlocked();
+  closePinModal();
+  if(window.showToast) showToast('PIN creado ✅');
+}
+
+if(pinOk){
+  pinOk.addEventListener('click', ()=>{
+    if(pinMode === 'setup') trySetupPin();
+    else tryUnlockPin();
+  });
+}
+
+if(pinInput){
+  pinInput.addEventListener('input', ()=>{
+    pinInput.value = pinInput.value.replace(/\D/g,'').slice(0,4);
+  });
+  pinInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      if(pinMode === 'setup') trySetupPin();
+      else tryUnlockPin();
+    }
+  });
+}
+if(pinConfirm){
+  pinConfirm.addEventListener('input', ()=>{
+    pinConfirm.value = pinConfirm.value.replace(/\D/g,'').slice(0,4);
+  });
+  pinConfirm.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      trySetupPin();
+    }
+  });
+}
+
+if(pinClose){
+  pinClose.addEventListener('click', ()=>{
+    // En modo unlock, no cerramos para mantener privacidad
+    if(pinError) pinError.textContent = 'Ingresá el PIN para continuar.';
+  });
+}
+
+if(pinLater){
+  pinLater.addEventListener('click', ()=>{
+    closePinModal();
+  });
+}
+
+if(pinBackdrop){
+  pinBackdrop.addEventListener('click', (e)=>{
+    // No cerrar tocando afuera: evita bypass
+    if(pinError) pinError.textContent = 'Ingresá el PIN para continuar.';
+  });
+}
+
+btnPickDir.addEventListener('click', pickWorkDir);
+btnSaveAll.addEventListener('click', saveAllToDisk);
+if(btnConfigLinks) btnConfigLinks.addEventListener('click', configureAllQuickLinks);
+if(btnIaHighlight) btnIaHighlight.addEventListener('click', highlightDatasetPanel);
+if(agendaModalClose) agendaModalClose.addEventListener('click', closeAgendaDetail);
+if(agendaBackdrop) agendaBackdrop.addEventListener('click', (e)=>{ if(e.target===agendaBackdrop) closeAgendaDetail(); });
+if(btnPrevMonth) btnPrevMonth.addEventListener('click', ()=>{ calendarRefDate.setMonth(calendarRefDate.getMonth()-1); renderCalendarViews(); });
+if(btnNextMonth) btnNextMonth.addEventListener('click', ()=>{ calendarRefDate.setMonth(calendarRefDate.getMonth()+1); renderCalendarViews(); });
+
+  btnExportJson.addEventListener('click', ()=>{
+    const blob = new Blob([JSON.stringify(DATA, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'agenda_directiva_backup.json'; a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  btnImportJson.addEventListener('click', ()=> importFile.click());
+  importFile.addEventListener('change', (ev)=>{
+    const f = ev.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const obj = JSON.parse(e.target.result);
+      if(!confirm('Importar datos y reemplazar la base actual?')) return;
+      DATA = obj;
+      writeLS(); renderAll(); alert('Importación completa');
+    }catch(err){ alert('Error en importación: ' + err.message); }
+    };
+    reader.readAsText(f);
+  });
+
+  if(btnCopyDataset){
+    const fallbackCopy = (text)=>{
+      const area = document.createElement('textarea');
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand('copy');
+      document.body.removeChild(area);
+    };
+    btnCopyDataset.addEventListener('click', ()=>{
+      const datasetString = JSON.stringify(buildAiDataset(), null, 2);
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(datasetString)
+          .then(()=> showToast('Dataset copiado. Pegalo en tu asistente de IA.'))
+          .catch(()=> fallbackCopy(datasetString));
+      } else {
+        fallbackCopy(datasetString);
+      }
+    });
+  }
+
+  if(btnDownloadDataset){
+    btnDownloadDataset.addEventListener('click', ()=>{
+      const blob = new Blob([JSON.stringify(buildAiDataset(), null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `dataset_agenda_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  }
+
+  filterInput.addEventListener('input', ()=> renderRecords(filterInput.value));
+btnNewRecord.addEventListener('click', ()=>{
+  const title = prompt('Nombre del contacto:') || '';
+  if(!title) return;
+  const note = prompt('Notas / resumen (opcional):') || '';
+  const r = { id: uid('r'), title, notes: note, dateCreated: nowISO(), dateModified: nowISO(), files: [], tags: [] };
+  DATA.records.push(r); writeLS(); renderRecords();
+});
+
+// Agenda add (con adjunto opcional)
+btnAddAgenda.addEventListener('click', async ()=>{
+  const title = agendaTitle.value.trim();
+  const date = agendaDate.value;
+  const time = agendaTime.value;
+  if(!title || !date){ alert('Ingresá título y fecha'); return; }
+  const ev = { id: uid('a'), title, date, time, notes: agendaNotes.value.trim(), created: nowISO(), files: [] };
+  const fInput = document.getElementById('agendaFileInput');
+  if(fInput && fInput.files && fInput.files[0]){
+    try{
+      const f = fInput.files[0];
+      const res = await saveFileToPdfFolder(f);
+      const fileMeta = { id: uid('f'), name: res.name || f.name, path: res.path || null, dataUrl: res.dataUrl || null, uploaded: nowISO() };
+      ev.files.push(fileMeta);
+    }catch(err){ console.error('Error al guardar archivo:', err); }
+  }
+  DATA.agenda.push(ev);
+  writeLS();
+  agendaTitle.value=''; agendaDate.value=''; agendaTime.value=''; agendaNotes.value=''; if(fInput) fInput.value='';
+  renderAgenda();
+});
+
+btnExportAgenda.addEventListener('click', ()=>{
+  const rows = [['Título','Fecha','Hora','Notas']];
+  DATA.agenda.forEach(a => rows.push([a.title || '', a.date || '', a.time || '', (a.notes||'').replace(/\n/g,' ')]));
+  const csv = rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'agenda_export.csv'; a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// agenda filter
+if (typeof agendaFilter !== 'undefined' && agendaFilter){ agendaFilter.addEventListener('input', (e)=>{ renderAgenda(e.target.value); }); }
+
+// File upload (PDF)
+fileInput.addEventListener('change', async (ev)=>{
+  const f = ev.target.files[0]; if(!f) return;
+  const recTitle = prompt('Adjuntar a (nombre del contacto) — dejar vacío para crear archivo global:','');
+  let record = null;
+  if(recTitle){
+    record = DATA.records.find(r=> r.title && r.title.toLowerCase() === recTitle.toLowerCase());
+    if(!record){
+      if(!confirm('Contacto no encontrado. ¿Crear nuevo contacto con ese nombre?')){ ev.target.value=''; return; }
+      record = { id: uid('r'), title: recTitle, notes:'', dateCreated: nowISO(), dateModified: nowISO(), files: [], tags: [] };
+      DATA.records.push(record);
+    }
+  }
+  const res = await saveFileToPdfFolder(f);
+  const fileMeta = { id: uid('f'), name: res.name || f.name, path: res.path || null, dataUrl: res.dataUrl || null, uploaded: nowISO() };
+  if(record){
+    record.files = record.files || [];
+    record.files.push(fileMeta);
+    record.dateModified = nowISO();
+  }else{
+    DATA.records.push({ id: uid('r'), title: fileMeta.name, notes: 'Archivo adjunto', dateCreated: nowISO(), dateModified: nowISO(), files: [fileMeta], tags: ['archivo'] });
+  }
+  writeLS(); renderRecords(); renderFilesList(); ev.target.value = '';
+});
+
+function openStoredFile(f){
+  if(supportsFs && WORK_DIR_HANDLE && f.path){
+    (async ()=>{
+      try{
+        const pdfDir = await WORK_DIR_HANDLE.getDirectoryHandle('pdf');
+        const fh = await pdfDir.getFileHandle(f.name);
+        const file = await fh.getFile();
+        const url = URL.createObjectURL(file);
+        window.open(url, '_blank');
+      }catch(e){ alert('No se pudo abrir desde carpeta. Revisá la ruta pdf.'); }
+    })();
+    return;
+  }
+  if(f.dataUrl){ window.open(f.dataUrl, '_blank'); return; }
+  alert('No hay archivo guardado o se subió en otro navegador.');
+}
+
+  function renderFilesList(){
+    if(!filesList) return;
+    filesList.innerHTML = '';
+    const files = [];
+  DATA.records.forEach(r=>{ (r.files||[]).forEach(f=> files.push({ recTitle: r.title, ...f })); });
+  files.slice().reverse().slice(0,40).forEach(f=>{
+    const left = document.createElement('div'); left.className='item-left';
+    left.innerHTML = `<strong>${f.name}</strong><div class="meta">${f.recTitle || ''} · ${f.uploaded? formatDate(f.uploaded):''}</div>`;
+    const controls = document.createElement('div'); controls.className='item-controls';
+    const btnOpen = document.createElement('button'); btnOpen.className='ctrl-btn'; btnOpen.textContent='Abrir';
+    btnOpen.onclick = (e)=>{ e.stopPropagation(); openStoredFile(f); };
+    controls.appendChild(btnOpen);
+    const wrapper = document.createElement('div'); wrapper.className='item';
+    wrapper.appendChild(left); wrapper.appendChild(controls);
+    filesList.appendChild(wrapper);
+  });
+}
+
+  // Notes
+  btnSaveNote.addEventListener('click', ()=>{
+    const text = notesArea.value.trim();
+    if(!text) return alert('Escribí algo');
+    DATA.notes.push({ id: uid('n'), text, created: nowISO() });
+    notesArea.value=''; writeLS(); renderNotes();
+    showToast('Nota guardada');
+  });
+
+  if(notesArea){
+    notesArea.addEventListener('keydown', (e)=>{
+      if(e.ctrlKey && e.key === 'Enter'){
+        e.preventDefault();
+        btnSaveNote.click();
+      }
+    });
+  }
+
+btnDownloadNotes.addEventListener('click', ()=>{
+  const text = DATA.notes.map(n => `${formatDate(n.created)}\n${n.text}\n\n`).join('\n');
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `notas_${new Date().toISOString().slice(0,10)}.txt`; a.click(); URL.revokeObjectURL(a.href);
+});
+
+// Reminders
+btnAddRem.addEventListener('click', ()=>{
+  const title = remTitle.value.trim();
+  const date = remDate.value;
+  const time = remTime.value;
+  if(!title || !date) return alert('Ingresá título y fecha');
+  DATA.reminders.push({ id: uid('rem'), title, date, time, notes: remNotes.value.trim(), created: nowISO() });
+  remTitle.value=''; remDate.value=''; remTime.value=''; remNotes.value='';
+  writeLS(); renderReminders();
+});
+// ---------- Eventos modal perfil ----------
+const profileBackdrop = document.getElementById('profileBackdrop');
+const profileSave = document.getElementById('profileSave');
+const profileClose = document.getElementById('profileClose');
+
+if(profileSave){
+  profileSave.addEventListener('click', ()=>{
+    const name = document.getElementById('profileName').value.trim();
+    const use  = document.getElementById('profileUse').value.trim();
+
+    localStorage.setItem(
+      'agenda_user_profile_v1',
+      JSON.stringify({
+        name,
+        use,
+        created: new Date().toISOString()
+      })
+    );
+
+    profileBackdrop.style.display = 'none';
+    showToast('Agenda personalizada ✅');
+  });
+}
+
+if(profileClose){
+  profileClose.addEventListener('click', ()=>{
+    profileBackdrop.style.display = 'none';
+  });
+}
+
+
+// next reminder
+function updateNextReminder(){
+  const upcoming = DATA.reminders.slice().filter(r=>r.date).sort((a,b)=> (a.date + (a.time||'')) .localeCompare(b.date + (b.time||'')));
+  if(upcoming.length===0){ nextReminder.textContent = '—'; return; }
+  const n = upcoming[0];
+  nextReminder.textContent = `${formatDate(n.date)} ${n.time || ''} · ${n.title}`;
+}
+
+// periodic reminder checks (basic, con guardia para navegadores sin Notification)
+const supportsNotification = (typeof Notification !== 'undefined');
+if(supportsNotification){
+  setInterval(()=>{
+    const now = new Date();
+    DATA.reminders.forEach(r=>{
+      if(!r._notified && r.date){
+        const dt = new Date(r.date + 'T' + (r.time || '00:00'));
+        if(now >= dt){
+          if(Notification.permission === 'granted'){
+            new Notification('Recordatorio', { body: `${r.title} · ${r.notes || ''}` });
+          } else if(Notification.permission !== 'denied'){
+            Notification.requestPermission().then(p => { if(p==='granted') new Notification('Recordatorio', { body: `${r.title}` }); });
+          }
+          r._notified = true;
+        }
+      }
+    });
+  }, 30 * 1000);
+}
+
+// ---------- Helpers & init ----------
+function renderFilesListAndRecords(){ renderFilesList(); renderRecords(filterInput.value); }
+
+function openAgendaDetail(id){
+  const ev = DATA.agenda.find(x=>x.id===id);
+  if(!ev) return;
+  agendaModalTitle.textContent = ev.title || '';
+  agendaModalDate.textContent = `${formatDate(ev.date)} ${ev.time || ''}`;
+  agendaModalNotes.textContent = ev.notes || '—';
+  agendaModalFiles.innerHTML = '';
+  (ev.files||[]).forEach(f=>{
+    const btn = document.createElement('button');
+    btn.className = 'file-link';
+    btn.textContent = f.name || 'Archivo';
+    btn.onclick = (e)=>{ e.stopPropagation(); openStoredFile(f); };
+    agendaModalFiles.appendChild(btn);
+  });
+  agendaBackdrop.style.display = 'flex';
+}
+
+function closeAgendaDetail(){
+  agendaBackdrop.style.display = 'none';
+}
+
+(function init(){
+  const ls = readLS(); if(ls) DATA = ls;
+  QUICK_LINKS = loadQuickLinks();
+  renderQuickLinks();
+  renderAll(); updateToday(); showPanel('home');
+
+// ---------- PIN gate ----------
+  const storedPin = getPin();
+  if(!isUnlocked()){
+    if(storedPin){
+      openPinModal('unlock');
+    }else{
+      // Primera vez: crear PIN (obligatorio)
+      openPinModal('setup');
+    }
+  }
+
+
+
+})();
+
+document.addEventListener('keydown', (e)=>{
+  if(e.ctrlKey && e.key.toLowerCase() === 's'){ e.preventDefault(); saveAllToDisk(); }
+  if(e.ctrlKey && e.key === '1'){ showPanel('agenda'); }
+  if(e.ctrlKey && e.key === '5'){ showPanel('calendar'); }
+  if(e.ctrlKey && e.key === '2'){ showPanel('files'); }
+  if(e.ctrlKey && e.key === '3'){ showPanel('notes'); }
+  if(e.ctrlKey && e.key === '4'){ showPanel('reminders'); }
+});
+
+// Toast
+function showToast(text){
+  const t = document.getElementById('notificacion');
+  t.textContent = text;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 3500);
+}
+
+
+// UI: ocultar texto de Auto-guardado en Contactos (se mantiene activo)
+(function(){
+  try{
+    const cb = document.getElementById('autoSave');
+    if(cb){
+      const box = cb.closest('.small');
+      if(box) box.style.display = 'none';
+    }
+  }catch(e){}
+})();
+
+
+window.AGENDA_DIRECTIVA = { DATA, saveAllToDisk, pickWorkDir, readLS };
+
+</script>
+
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(console.error);
+    });
+  }
+</script>
+
+
+<script>
+/* ====== BUZON MODULE (merged, no pin) ====== */
+(function(){
+
+    /***********************
+     * Storage & helpers
+     ************************/
+    const LS_KEY = "bx_buzon_state_v1";
+
+    const DEFAULT_STATE = {
+      entries: [] // {id, text, createdAt, updatedAt, status, category, type, dueDate, priority}
+    };
+
+    function nowISO(){ return new Date().toISOString(); }
+    function uid(){
+      return `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+    }
+    function fmt(ts){
+      try{
+        const d = new Date(ts);
+        return d.toLocaleString("es-AR", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+      }catch{ return ts; }
+    }
+    function clip(s, n=130){
+      const t = (s||"").trim().replace(/\s+/g," ");
+      return t.length>n ? t.slice(0,n-1)+"…" : t;
+    }
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(LS_KEY);
+        if (!raw) return structuredClone(DEFAULT_STATE);
+        const st = JSON.parse(raw);
+        if (!st || !Array.isArray(st.entries)) return structuredClone(DEFAULT_STATE);
+        return st;
+      }catch{
+        return structuredClone(DEFAULT_STATE);
+      }
+    }
+    function saveState(){
+      localStorage.setItem(LS_KEY, JSON.stringify(state));
+    }
+
+    let state = loadState();
+
+    /***********************
+     * PIN (hash) utilities
+     ************************/
+    async function sha256(text){
+      const enc = new TextEncoder().encode(text);
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      const arr = Array.from(new Uint8Array(buf));
+      return arr.map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+    /***********************
+     * Entries: add/list/view/edit
+     ************************/
+    const quickText = document.getElementById("bx_quickText");
+    const saveQuickBtn = document.getElementById("bx_saveQuickBtn");
+    const listEl = document.getElementById("bx_list");
+    const countsEl = document.getElementById("bx_counts");
+    const searchInput = document.getElementById("bx_searchInput");
+    const statusFilter = document.getElementById("bx_statusFilter");
+    const categoryFilter = document.getElementById("bx_categoryFilter");
+    const clearDoneBtn = document.getElementById("bx_clearDoneBtn");
+
+    const CATEGORIES = ['Sin clasificar', 'Trabajo', 'Estudio', 'Hogar', 'Salud', 'Finanzas', 'Trámites', 'Compras', 'Ideas', 'Personal'];
+    const TYPES = ["Nota","Tarea","Recordatorio","Plan"];
+    const PRIORITIES = ["Normal","Alta","Baja"];
+
+    // Fill category filter options (main screen)
+    (function initCategoryFilter(){
+      if (!categoryFilter) return;
+      // Reset options
+      categoryFilter.innerHTML = '<option value="all">Todas las categorías</option>';
+      for (const c of CATEGORIES){
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        categoryFilter.appendChild(opt);
+      }
+    })();
+
+    function addEntry(text){
+      const t = (text||"").trim();
+      if (!t) return false;
+
+      const e = {
+        id: uid(),
+        text: t,
+        createdAt: nowISO(),
+        updatedAt: nowISO(),
+        status: "open",
+        category: "Sin clasificar",
+        type: "Nota",
+        dueDate: "",
+        priority: "Normal"
+      };
+      state.entries.unshift(e);
+      saveState();
+      return true;
+    }
+
+    function updateEntry(id, patch){
+      const idx = state.entries.findIndex(x=>x.id===id);
+      if (idx === -1) return false;
+      state.entries[idx] = { ...state.entries[idx], ...patch, updatedAt: nowISO() };
+      saveState();
+      return true;
+    }
+
+    function deleteEntry(id){
+      state.entries = state.entries.filter(x=>x.id!==id);
+      saveState();
+    }
+
+    function clearDone(){
+      state.entries = state.entries.filter(x=>x.status!=="done");
+      saveState();
+    }
+
+    function filteredEntries(){
+      const q = (searchInput.value||"").trim().toLowerCase();
+      const s = statusFilter.value;
+      const csel = (categoryFilter && categoryFilter.value) ? categoryFilter.value : "all";
+
+      return state.entries.filter(e=>{
+        if (s==="open" && e.status!=="open") return false;
+        if (s==="done" && e.status!=="done") return false;
+
+        const cat = e.category || "Sin clasificar";
+        if (csel !== "all" && cat !== csel) return false;
+
+        if (!q) return true;
+        const blob = `${e.text} ${cat} ${e.type||""} ${e.priority||""}`.toLowerCase();
+        return blob.includes(q);
+      });
+    }
+
+
+    saveQuickBtn.addEventListener("click", ()=>{
+      const ok = addEntry(quickText.value);
+      if (!ok) return;
+      quickText.value = "";
+      renderAll();
+    });
+
+    quickText.addEventListener("keydown", (e)=>{
+      // Ctrl+Enter to save
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter"){
+        saveQuickBtn.click();
+      }
+    });
+
+    searchInput.addEventListener("input", renderList);
+    statusFilter.addEventListener("change", renderList);
+    categoryFilter && categoryFilter.addEventListener("change", renderList);
+
+    clearDoneBtn.addEventListener("click", ()=>{
+      if (!confirm("¿Eliminar todos los registros marcados como Hecho?")) return;
+      clearDone();
+      renderAll();
+    });
+
+    /***********************
+     * Modal (read/edit)
+     ************************/
+    const entryModal = document.getElementById("bx_entryModal");
+    const modalTitle = document.getElementById("bx_modalTitle");
+    const modalSub = document.getElementById("bx_modalSub");
+    const modalBody = document.getElementById("bx_modalBody");
+    const modalCloseBtn = document.getElementById("bx_modalCloseBtn");
+
+    function openEntryModal(entry){
+      modalTitle.textContent = entry.status==="done" ? "Entrada (Hecho)" : "Entrada";
+      modalSub.textContent = `Creado: ${fmt(entry.createdAt)} • Actualizado: ${fmt(entry.updatedAt)}`;
+
+      const catOptions = CATEGORIES.map(c=>`<option value="${escapeHtml(c)}"${entry.category===c?" selected":""}>${escapeHtml(c)}</option>`).join("");
+      const typeOptions = TYPES.map(t=>`<option value="${escapeHtml(t)}"${entry.type===t?" selected":""}>${escapeHtml(t)}</option>`).join("");
+      const prioOptions = PRIORITIES.map(p=>`<option value="${escapeHtml(p)}"${entry.priority===p?" selected":""}>${escapeHtml(p)}</option>`).join("");
+
+      modalBody.innerHTML = `
+        <div class="chips" style="margin-bottom:10px;">
+          <span class="chip ${entry.status==="done"?"":"gray"}">${entry.status==="done"?"✅ Hecho":"⏳ Pendiente"}</span>
+          <span class="chip">${escapeHtml(entry.category||"Sin clasificar")}</span>
+          <span class="chip gray">${escapeHtml(entry.type||"Nota")}</span>
+          <span class="chip gray">${escapeHtml(entry.priority||"Normal")}</span>
+        </div>
+
+        <h4>Texto</h4>
+        <textarea id="editText" style="min-height:160px;">${escapeHtml(entry.text||"")}</textarea>
+
+        <div class="sep"></div>
+
+        <div class="row">
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Categoría</div>
+            <select id="editCategory">${catOptions}</select>
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Tipo</div>
+            <select id="editType">${typeOptions}</select>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Prioridad</div>
+            <select id="editPriority">${prioOptions}</select>
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:6px;">Fecha / Recordatorio (opcional)</div>
+            <input id="editDue" type="date" value="${escapeHtml(entry.dueDate||"")}" />
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row">
+          <button class="btn primary shrink" id="saveEditBtn" type="button">Guardar cambios</button>
+          <button class="btn secondary shrink" id="toggleDoneBtn" type="button">${entry.status==="done"?"Marcar Pendiente":"Marcar Hecho"}</button>
+          <button class="btn danger shrink" id="deleteBtn" type="button">Borrar</button>
+          <div class="muted" id="editHint"></div>
+        </div>
+      `;
+
+      // wire actions
+      const saveEditBtn = document.getElementById("saveEditBtn");
+      const toggleDoneBtn = document.getElementById("toggleDoneBtn");
+      const deleteBtn = document.getElementById("deleteBtn");
+      const editHint = document.getElementById("editHint");
+
+      saveEditBtn.addEventListener("click", ()=>{
+        const newText = (document.getElementById("editText").value || "").trim();
+        if (!newText){
+          editHint.textContent = "El texto no puede quedar vacío.";
+          editHint.style.color = "var(--danger)";
+          return;
+        }
+        updateEntry(entry.id, {
+          text: newText,
+          category: document.getElementById("editCategory").value,
+          type: document.getElementById("editType").value,
+          priority: document.getElementById("editPriority").value,
+          dueDate: document.getElementById("editDue").value || ""
+        });
+        editHint.textContent = "Guardado.";
+        editHint.style.color = "var(--mut)";
+        // refresh entry ref
+        entry = state.entries.find(x=>x.id===entry.id) || entry;
+        renderAll();
+        openEntryModal(entry); // re-open refreshed
+      });
+
+      toggleDoneBtn.addEventListener("click", ()=>{
+        updateEntry(entry.id, { status: entry.status==="done" ? "open" : "done" });
+        renderAll();
+        closeEntryModal();
+      });
+
+      deleteBtn.addEventListener("click", ()=>{
+        if (!confirm("¿Borrar esta entrada?")) return;
+        deleteEntry(entry.id);
+        renderAll();
+        closeEntryModal();
+      });
+
+      entryModal.classList.add("show");
+      entryModal.setAttribute("aria-hidden","false");
+    }
+
+    function closeEntryModal(){
+      entryModal.classList.remove("show");
+      entryModal.setAttribute("aria-hidden","true");
+    }
+
+    // Close behaviors (delegated, robust)
+    document.addEventListener("click", (e)=>{
+      const t = e.target;
+      if (!t) return;
+
+      if (t.id === "bx_modalCloseBtn" || (t.closest && t.closest("#modalCloseBtn"))){
+        e.preventDefault(); e.stopPropagation();
+        closeEntryModal(); return;
+      }
+      const overlay = t.closest ? t.closest("#entryModal") : null;
+      if (overlay && t === overlay){
+        e.preventDefault(); e.stopPropagation();
+        closeEntryModal(); return;
+      }
+    }, true);
+
+    document.addEventListener("keydown", (e)=>{
+      if (e.key === "Escape") closeEntryModal();
+    });
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    /***********************
+     * Render
+     ************************/
+    function renderCounts(){
+      const total = state.entries.length;
+      const open = state.entries.filter(e=>e.status==="open").length;
+      const done = total - open;
+      countsEl.textContent = `${total} total • ${open} pendientes • ${done} hechos`;
+    }
+
+    function renderList(){
+      renderCounts();
+
+      const items = filteredEntries();
+      listEl.innerHTML = "";
+
+      if (!items.length){
+        listEl.innerHTML = `
+          <div class="muted">No hay entradas para mostrar con esos filtros.</div>
+        `;
+        return;
+      }
+
+      // Group by category for clearer reading
+      const byCat = new Map();
+      for (const e of items){
+        const cat = e.category || "Sin clasificar";
+        if (!byCat.has(cat)) byCat.set(cat, []);
+        byCat.get(cat).push(e);
+      }
+
+      const orderedCats = ["Sin clasificar", ...CATEGORIES.filter(c=>c!=="Sin clasificar")];
+      const catsToRender = orderedCats.filter(c=>byCat.has(c)).concat(
+        Array.from(byCat.keys()).filter(c=>!orderedCats.includes(c))
+      );
+
+      const makeItem = (e) => {
+        const div = document.createElement("div");
+        div.className = "item";
+        const title = clip(e.text, 150);
+        const cat = e.category || "Sin clasificar";
+        const type = e.type || "Nota";
+        const prio = e.priority || "Normal";
+        const due = e.dueDate ? ` • 📅 ${e.dueDate}` : "";
+
+        div.innerHTML = `
+          <div class="head">
+            <div style="flex:1;">
+              <p class="title">${escapeHtml(title)}</p>
+              <div class="meta">
+                <span class="pill ${e.status==="done"?"done":"green"}">${e.status==="done"?"✅ Hecho":"⏳ Pendiente"}</span>
+                <span class="pill green">${escapeHtml(cat)}</span>
+                <span class="pill">${escapeHtml(type)}</span>
+                <span class="pill">${escapeHtml(prio)}</span>
+                <span class="pill">${escapeHtml(fmt(e.createdAt))}${escapeHtml(due)}</span>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn secondary smallbtn" type="button" data-act="view">Ver</button>
+              <button class="btn secondary smallbtn" type="button" data-act="toggle">${e.status==="done"?"Reabrir":"Hecho"}</button>
+            </div>
+          </div>
+        `;
+
+        div.addEventListener("click", ()=> openEntryModal(e));
+        div.querySelector('[data-act="view"]').addEventListener("click", (ev)=>{
+          ev.preventDefault(); ev.stopPropagation();
+          openEntryModal(e);
+        });
+        div.querySelector('[data-act="toggle"]').addEventListener("click", (ev)=>{
+          ev.preventDefault(); ev.stopPropagation();
+          updateEntry(e.id, { status: e.status==="done" ? "open" : "done" });
+          renderAll();
+        });
+
+        return div;
+      };
+
+      for (const cat of catsToRender){
+        const arr = byCat.get(cat) || [];
+        if (!arr.length) continue;
+
+        const h = document.createElement("div");
+        h.className = "muted";
+        h.style.fontWeight = "900";
+        h.style.letterSpacing = ".15px";
+        h.style.margin = "10px 2px 6px";
+        h.textContent = `${cat} (${arr.length})`;
+        listEl.appendChild(h);
+
+        for (const e of arr){
+          listEl.appendChild(makeItem(e));
+        }
+      }
+    }
+
+    function renderAll(){
+      renderCounts();
+      renderList();
+    }
+
+    /***********************
+     * AI / Memory Base
+     ************************/
+    const aiBtn = document.getElementById("bx_aiBtn");
+
+    function buildPrompt(){
+      const entries = state.entries
+        .slice()
+        .sort((a,b)=> (a.createdAt||"").localeCompare(b.createdAt||""));
+
+      // group by category
+      const groups = new Map();
+      for (const e of entries){
+        const c = e.category || "Sin clasificar";
+        if (!groups.has(c)) groups.set(c, []);
+        groups.get(c).push(e);
+      }
+
+     const lines = [];
+lines.push(`Actuá como un asistente experto en:
+- organización personal
+- secretaría institucional
+- coordinación de equipos
+- planificación operativa
+
+Estoy usando este buzón como capturador rápido de ideas, tareas, recordatorios y problemas.
+La información puede estar desordenada, incompleta o mezclada.
+
+TU OBJETIVO:
+Transformar este conjunto de entradas en un sistema claro, accionable y priorizado,
+ayudándome a tomar decisiones y a no olvidar nada importante.
+
+NO inventes datos. Trabajá solo con lo que aparece.
+Si falta información, señalalo explícitamente.
+
+=== TAREAS OBLIGATORIAS ===
+
+1) CLASIFICACIÓN
+Reorganizá cada entrada en una de estas áreas (si corresponde):
+- San Simón – Preceptor
+- San Simón – Secretaría / Cooperativa
+- Bioparque – Coordinación
+- Proyectos / Inversiones / Emprendimientos
+- Personal
+Si una entrada está mal clasificada, corregila y explicá brevemente por qué.
+
+2) CONVERSIÓN A ACCIONES
+Convertí cada entrada relevante en una tarea concreta usando este formato:
+VERBO + QUÉ + PARA QUÉ + (QUIÉN si aplica)
+
+3) PRIORIDAD
+Asigná prioridad:
+- ALTA: urgente o con impacto institucional / riesgo
+- MEDIA: importante pero no urgente
+- BAJA: puede esperar
+
+4) AGENDA OPERATIVA
+Proponé una agenda práctica:
+- Qué debería hacer HOY
+- Qué esta SEMANA
+- Qué puede programarse más adelante
+
+5) ALERTAS Y RIESGOS
+Detectá posibles olvidos, conflictos latentes y dependencias de terceros.
+
+6) SIMPLIFICACIÓN
+Indicá tareas repetidas, delegables y automatizables.
+
+=== ESTILO DE RESPUESTA ===
+- Claro y directo
+- En listas
+- Sin frases genéricas`);
+      
+      for (const [cat, arr] of groups.entries()){
+        lines.push(`### ${cat}`);
+        for (const e of arr){
+          const status = e.status==="done" ? "HECHO" : "PENDIENTE";
+          const due = e.dueDate ? ` | FECHA:${e.dueDate}` : "";
+          const type = e.type ? ` | TIPO:${e.type}` : "";
+          const prio = e.priority ? ` | PRIORIDAD:${e.priority}` : "";
+          lines.push(`- [${status}] ${e.text.replace(/\s+/g," ").trim()}${type}${prio}${due} (creado ${fmt(e.createdAt)})`);
+        }
+        lines.push("");
+      }
+
+      lines.push("SALIDA PEDIDA:");
+      lines.push("1) Resumen por categoría");
+      lines.push("2) Lista priorizada (Top 10) con acciones");
+      lines.push("3) Qué debería delegar / automatizar");
+      lines.push("4) Alertas (cosas sensibles / urgentes)");
+      return lines.join("\n");
+    }
+
+    aiBtn.addEventListener("click", async ()=>{
+      const prompt = buildPrompt();
+      try{
+        await navigator.clipboard.writeText(prompt);
+        alert("Memory Base copiada al portapapeles. Pegala en ChatGPT cuando quieras.");
+      }catch{
+        // fallback: open modal with prompt
+        modalTitle.textContent = "AI / Memory Base";
+        modalSub.textContent = "Copiá el texto y pegalo en ChatGPT.";
+        modalBody.innerHTML = `<div class="block">${escapeHtml(prompt)}</div>`;
+        entryModal.classList.add("show");
+        entryModal.setAttribute("aria-hidden","false");
+      }
+    });
+
+    /***********************
+     * Export / Import JSON
+     ************************/
+    const exportBtn = document.getElementById("bx_exportBtn");
+    const importBtn = document.getElementById("bx_importBtn");
+    const importFile = document.getElementById("bx_importFile");
+
+    exportBtn.addEventListener("click", ()=>{
+      const payload = {
+        exportedAt: nowISO(),
+        app: "buzon_personal_v1",
+        state
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type:"application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `buzon_export_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    importBtn.addEventListener("click", ()=> importFile.click());
+
+    importFile.addEventListener("change", async ()=>{
+      const f = importFile.files && importFile.files[0];
+      importFile.value = "";
+      if (!f) return;
+
+      try{
+        const text = await f.text();
+        const data = JSON.parse(text);
+        const incoming = data.state || data;
+        if (!incoming || !Array.isArray(incoming.entries)) throw new Error("Formato inválido.");
+
+        if (!confirm("¿Importar y reemplazar tu buzón actual? (Se recomienda exportar antes)")) return;
+        state = incoming;
+        saveState();
+        renderAll();
+        alert("Importación completada.");
+      }catch(err){
+        alert("No se pudo importar: " + (err?.message || "error"));
+      }
+    });
+
+    /***********************
+     * PWA: minimal manifest + SW generator (optional)
+     * - If you don't create manifest.webmanifest & sw.js files, the app still works as a web app.
+     ************************/
+    if ("serviceWorker" in navigator){
+      // If sw.js exists in repo, it will register; otherwise it silently fails.
+      navigator.serviceWorker.register("./sw.js").catch(()=>{});
+    }
+
+    /***********************
+     * Init
+     ************************/
+    registerActivityListeners();
+    renderAll();
+  
+})();
+
+</script>
+</body>
+</html>
